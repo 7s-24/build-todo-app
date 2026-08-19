@@ -1431,3 +1431,118 @@ button:focus {
     font-size: 13px;
   }
 }
+
+
+/* ---------- 格子详情 ---------- */
+
+/* 能点开的格子：光标先说话，hover 再加底色，不加图标不加下划线 */
+.is-drill {
+  cursor: pointer;
+}
+
+.is-drill:hover {
+  background: var(--fg);
+  color: var(--inverse);
+}
+
+.celldetail {
+  width: 380px;
+  padding: 0;
+  gap: 0;
+}
+
+.cd-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.cd-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cd-month {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cd-total {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cd-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.cd-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 11.5px;
+}
+
+.cd-row:hover {
+  background: var(--faint);
+}
+
+.cd-date {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  width: 34px;
+}
+
+.cd-cat {
+  flex: none;
+}
+
+.cd-note {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cd-amt {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* 外币按原样也标出来，换算是我们做的，原始金额才是他记下的 */
+.cd-orig {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.cd-none {
+  padding: 14px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+@media (max-width: 700px) {
+  .celldetail {
+    width: 100%;
+  }
+
+  .cd-row {
+    font-size: 13px;
+    padding: 9px 14px;
+  }
+}

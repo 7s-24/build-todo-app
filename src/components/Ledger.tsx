@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import AppSwitch from "./AppSwitch";
+import CellDetail from "./CellDetail";
 import { Chevron } from "./icons";
 import { GROUP_ORDER, type Group, type NetWorthRow, type YearReport } from "@/lib/ledger";
 
@@ -32,6 +33,7 @@ export default function Ledger() {
   const [year, setYear] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [cell, setCell] = useState<{ month: number; detail?: string; group?: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (y?: number) => {
@@ -151,10 +153,11 @@ export default function Ledger() {
                     </td>
                     {o.pct.map((v, i) => (
                       <td
-                        className={`lnum${
+                        className={`lnum${v === null ? "" : " is-drill"}${
                           o.target !== null && v !== null && v > o.target ? " is-over" : ""
                         }`}
                         key={i}
+                        onClick={() => v !== null && setCell({ month: i + 1, group: o.group })}
                       >
                         {pct(v)}
                       </td>
@@ -200,7 +203,13 @@ export default function Ledger() {
                         <tr key={`${g}-${d.detail}`}>
                           <td className="lname lindent">{d.detail}</td>
                           {d.months.map((v, i) => (
-                            <td className="lnum" key={i}>{yen(v)}</td>
+                            <td
+                              className={`lnum${v ? " is-drill" : ""}`}
+                              key={i}
+                              onClick={() => v && setCell({ month: i + 1, detail: d.detail })}
+                            >
+                              {yen(v)}
+                            </td>
                           ))}
                           <td className="lnum lmuted">{yen(d.total)}</td>
                         </tr>
@@ -208,7 +217,13 @@ export default function Ledger() {
                       <tr className="lrow-sub">
                         <td className="lname">{g}</td>
                         {total.months.map((v, i) => (
-                          <td className="lnum" key={i}>{yen(v)}</td>
+                          <td
+                            className={`lnum${v ? " is-drill" : ""}`}
+                            key={i}
+                            onClick={() => v && setCell({ month: i + 1, group: g })}
+                          >
+                            {yen(v)}
+                          </td>
                         ))}
                         <td className="lnum">{yen(total.total)}</td>
                       </tr>
@@ -274,6 +289,15 @@ export default function Ledger() {
             .map(([c, r]) => `${c} ${r}`)
             .join(" · ")}
         </div>
+        {cell && (
+          <CellDetail
+            year={report.year}
+            month={cell.month}
+            detail={cell.detail}
+            group={cell.group}
+            onClose={() => setCell(null)}
+          />
+        )}
       </div>
     </div>
   );
