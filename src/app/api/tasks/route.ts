@@ -23,6 +23,11 @@ export async function POST(req: Request) {
     const today = String(body.today ?? "");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return bad("缺少 today");
 
+    const due =
+      typeof body.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.due)
+        ? body.due
+        : null;
+
     let date: string = body.date ?? "";
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       // 没指定日期 —— 按紧急程度自动落位
@@ -37,12 +42,13 @@ export async function POST(req: Request) {
         dailyLimit: settings.dailyLimit,
         counts,
         locked,
+        due,
       });
     }
 
     const [row] = await getDb()
       .insert(tasks)
-      .values({ title, date, priority, position: Date.now() % 100000 })
+      .values({ title, date, dueDate: due, priority, position: Date.now() % 100000 })
       .returning();
 
     return Response.json(toDTO(row));

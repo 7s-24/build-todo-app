@@ -7,7 +7,8 @@ const LEVELS: Priority[] = [1, 2, 3];
 
 /**
  * 底部快速录入。三档只用颜色区分 —— 没有 "高/中/低" 这种标签。
- * 日期留空就交给服务端按紧急程度自动落位；填了就直接钉在那天。
+ * 日期填的是「最晚完成日期」，不是「排在哪天」：排在哪天由档位自动决定，
+ * 截止日只是给排期设一条不许越过的上限，外加事后提醒。
  */
 export default function Dock({
   priority,
@@ -16,18 +17,18 @@ export default function Dock({
 }: {
   priority: Priority;
   onPriority: (p: Priority) => void;
-  onAdd: (title: string, priority: Priority, date?: ISODate) => void;
+  onAdd: (title: string, priority: Priority, due?: ISODate) => void;
 }) {
   const [text, setText] = useState("");
-  const [date, setDate] = useState("");
+  const [due, setDue] = useState("");
 
   function submit() {
     const title = text.trim();
     if (!title) return;
-    onAdd(title, priority, date || undefined);
+    onAdd(title, priority, due || undefined);
     setText("");
-    // 日期不粘连：留空才是常态，钉住某天应该每次都是明确动作
-    setDate("");
+    // 截止日不粘连：留空才是常态，设 deadline 应该每次都是明确动作
+    setDue("");
   }
 
   return (
@@ -63,9 +64,9 @@ export default function Dock({
       />
       <input
         type="date"
-        className={`dock-date${date ? " is-set" : ""}`}
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
+        className={`dock-date${due ? " is-set" : ""}`}
+        value={due}
+        onChange={(e) => setDue(e.target.value)}
       />
     </form>
   );

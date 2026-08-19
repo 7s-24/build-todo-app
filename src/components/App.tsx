@@ -141,11 +141,16 @@ export default function App() {
   }, []);
 
   const addTask = useCallback(
-    async (title: string, p: Priority, date?: ISODate) => {
+    async (
+      title: string,
+      p: Priority,
+      // date = 点格子时指定「排在哪天」；due = 底部输入框填的最晚完成日期
+      opts: { date?: ISODate; due?: ISODate } = {},
+    ) => {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, priority: p, date, today }),
+        body: JSON.stringify({ title, priority: p, today, ...opts }),
       });
       if (!res.ok) return;
       const created: TaskDTO = await res.json();
@@ -290,7 +295,7 @@ export default function App() {
           priority={priority}
           onToggle={toggleTask}
           onLock={toggleLock}
-          onAdd={addTask}
+          onAdd={(title, p, date) => addTask(title, p, { date })}
           onMove={moveTask}
           onMenu={(task, x, y) => setMenu({ task, x, y })}
         />
@@ -299,7 +304,7 @@ export default function App() {
       <Dock
         priority={priority}
         onPriority={setPriority}
-        onAdd={(title, p, date) => addTask(title, p, date)}
+        onAdd={(title, p, due) => addTask(title, p, { due })}
       />
 
       {menu && menuTask && (
