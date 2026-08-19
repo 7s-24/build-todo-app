@@ -29,6 +29,20 @@
       "when": 1787147205966,
       "tag": "0003_optimal_spencer_smythe",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787147909603,
+      "tag": "0004_easy_living_lightning",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787148058946,
+      "tag": "0005_moaning_wolfpack",
+      "breakpoints": true
     }
   ]
 }

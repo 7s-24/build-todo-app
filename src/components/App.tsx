@@ -6,6 +6,7 @@ import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
 import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
+import AppSwitch from "./AppSwitch";
 import DayDetail from "./DayDetail";
 import Projects from "./Projects";
 import { CalIcon, Chevron, FlagIcon, GearIcon, GridIcon, ListIcon, SharedCalIcon } from "./icons";
@@ -339,6 +340,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="bar">
+        <AppSwitch />
         {compact && (
           <div className="tabs">
             <button

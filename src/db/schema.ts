@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -5,7 +6,9 @@ import {
   date,
   boolean,
   integer,
+  numeric,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 /** priority: 1 = 最急, 2 = 普通, 3 = 可缓 */
@@ -62,3 +65,74 @@ export type Task = typeof tasks.$inferSelect;
 export type Day = typeof days.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 export type Project = typeof projects.$inferSelect;
+
+
+/* ===========================================================
+   账簿
+   录入仍然在喵喵记账里做，这边只接它导出的 CSV。
+   Excel 里 Raw 之下全是公式；这里只存 Raw 对应的原始字段，
+   分组、汇率换算、透视、净值一律算出来，不落库。
+   =========================================================== */
+
+export const txns = pgTable(
+  "transactions",
+  {
+    id: serial("id").primaryKey(),
+    /** 喵喵的分类名，映射到 (group, detail) 靠 categories 表 */
+    category: text("category").notNull(),
+    occurredAt: timestamp("occurred_at").notNull(),
+    /** 按喵喵原样：支出为负、收入为正 */
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    currency: text("currency").notNull().default("日元"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  /**
+   * 去重直接建在原始字段上。导出区间会重叠，同一笔重复上传必须是无害的。
+   * 不另存一列指纹 —— 那样「怎么算指纹」就成了第二份真相，
+   * 换个语言算一遍就对不上了。note 为空要归一，否则 NULL 之间互不冲突。
+   */
+  (t) => [
+    uniqueIndex("txns_dedupe_idx").on(
+      t.category,
+      t.occurredAt,
+      t.amount,
+      t.currency,
+      sql`coalesce(${t.note}, '')`,
+    ),
+  ],
+);
+
+/** 喵喵分类 → Group / Detail。Excel 里的 Reference!A:C */
+export const categories = pgTable("categories", {
+  name: text("name").primaryKey(),
+  group: text("group").notNull(),
+  detail: text("detail").notNull(),
+  position: integer("position").notNull().default(0),
+});
+
+/** 固定近似汇率，不是实时价 —— 只有明确要求时才改 */
+export const fxRates = pgTable("fx_rates", {
+  currency: text("currency").primaryKey(),
+  rate: numeric("rate", { precision: 12, scale: 4 }).notNull(),
+});
+
+/** 单行，id 恒为 1 */
+export const ledgerSettings = pgTable("ledger_settings", {
+  id: integer("id").primaryKey().default(1),
+  needsTarget: numeric("needs_target", { precision: 5, scale: 4 }).notNull().default("0.6"),
+  wantsTarget: numeric("wants_target", { precision: 5, scale: 4 }).notNull().default("0.1"),
+  investmentTarget: numeric("investment_target", { precision: 5, scale: 4 })
+    .notNull()
+    .default("0.3"),
+  /** 净值的起点。默认 0 —— 流水只从 2024-01 开始记 */
+  startBank: numeric("start_bank", { precision: 14, scale: 2 }).notNull().default("0"),
+  startInvestment: numeric("start_investment", { precision: 14, scale: 2 })
+    .notNull()
+    .default("0"),
+});
+
+export type Txn = typeof txns.$inferSelect;
+export type Category = typeof categories.$inferSelect;

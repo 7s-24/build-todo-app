@@ -1234,3 +1234,200 @@ button:focus {
     width: 34px;
   }
 }
+
+
+/* ===========================================================
+   顶层导航：日程 / 账簿
+   =========================================================== */
+
+.appswitch {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+
+.appswitch-btn {
+  padding: 3px 9px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.appswitch-btn.is-on {
+  background: var(--fg);
+  color: var(--inverse);
+}
+
+/* ===========================================================
+   账簿
+   =========================================================== */
+
+.ledger {
+  flex: 1;
+  overflow: auto;
+  padding: 0 0 40px;
+  min-height: 0;
+}
+
+.ledger-empty {
+  flex: 1;
+}
+
+.ledger-msg {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lsec {
+  padding: 18px 14px 6px;
+}
+
+.lsec h2 {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+/* 表格比屏幕宽是常态，让它自己横向滚，别把整页撑破 */
+.tscroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+
+.ltable {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ltable th,
+.ltable td {
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.ltable thead th {
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+  color: var(--muted);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+.ltable tbody tr:hover {
+  background: var(--faint);
+}
+
+.lname {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  border-right: 1px solid var(--line-soft);
+}
+
+.ltable tbody tr:hover .lname {
+  background: var(--faint);
+}
+
+.lindent {
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.lnum {
+  text-align: right;
+}
+
+.lmuted {
+  color: var(--muted);
+}
+
+.lstrong {
+  font-weight: 600;
+}
+
+/* 组小计：上面一条实线把它和明细分开 */
+.lrow-sub td {
+  border-top: 1px solid var(--line);
+}
+
+.lrow-strong td {
+  border-top: 1px solid var(--fg);
+  font-weight: 600;
+}
+
+/* 超标 / 为负 —— 复用紧急档的第一色，全站只有这三个色相 */
+.is-over {
+  color: var(--p1);
+}
+
+.zero {
+  color: var(--line);
+}
+
+.import-btn {
+  white-space: nowrap;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 3px 8px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.import-btn:hover {
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+.ledger-foot {
+  padding: 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.unmapped h2 {
+  color: var(--p1);
+}
+
+.unmapped-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.unmapped-row select,
+.unmapped-row input {
+  font-size: 12px;
+  padding: 3px 4px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.unmapped-row button {
+  font-size: 12px;
+  padding: 3px 10px;
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+@media (max-width: 700px) {
+  .lsec {
+    padding: 14px 10px 4px;
+  }
+
+  .ltable {
+    font-size: 12px;
+  }
+
+  .import-btn {
+    font-size: 13px;
+  }
+}
