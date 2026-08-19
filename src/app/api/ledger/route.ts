@@ -39,13 +39,8 @@ export async function GET(req: Request) {
       years,
       report,
       netWorth,
-      analysis: buildAnalysis(
-        data.txns,
-        data.cats,
-        data.rates,
-        netWorth.at(-1)?.bank ?? 0,
-        year,
-      ),
+      // 分析和选中的年份无关：它永远看最近 12 个月
+      analysis: buildAnalysis(data.txns, data.cats, data.rates, netWorth.at(-1)?.bank ?? 0),
       rates: data.rates,
       unmapped: data.unmapped,
       count: data.txns.length,

@@ -11,7 +11,7 @@ const pct = (v: number | null) => (v === null ? "·" : `${(v * 100).toFixed(0)}%
 export default function Analysis({ a }: { a: A }) {
   const t = useT();
   const last = a.trend.at(-1);
-  const mix = a.incomeMix.slice(-24);
+  const mix = a.incomeMix;
   const maxMix = Math.max(1, ...mix.map((m) => m.stable + m.temporary));
   const worst = a.ranking[0]?.total ?? -1;
 
@@ -54,11 +54,6 @@ export default function Analysis({ a }: { a: A }) {
             </div>
           ))}
         </div>
-        {a.trend.length > 0 && (
-          <div className="lfoot">
-            {a.trend[0].month} → {a.trend.at(-1)!.month}
-          </div>
-        )}
       </section>
 
       <section className="lsec">
@@ -119,7 +114,7 @@ export default function Analysis({ a }: { a: A }) {
 
       {/* ---- 分类排行 ---- */}
       <section className="lsec">
-        <h2>{t("analysis", "ranking")(a.rankingYear)}</h2>
+        <h2>{t("analysis", "ranking")}</h2>
         <div className="rank">
           {a.ranking.map((r) => (
             <div className="rank-row" key={r.detail}>
@@ -132,6 +127,10 @@ export default function Analysis({ a }: { a: A }) {
               <span className="rank-share">{(r.share * 100).toFixed(1)}%</span>
             </div>
           ))}
+        </div>
+        {/* 四块口径相同，范围只说一次 */}
+        <div className="lfoot">
+          {a.window.from} → {a.window.to}
         </div>
       </section>
     </>

@@ -16,12 +16,6 @@ export type { Lang };
 const DICT = {
   nav: { schedule: ["日程", "Schedule"], ledger: ["账簿", "Ledger"] },
 
-  projects: {
-    funded: ["Funded Project", "Funded Project"],
-    personal: ["Personal Project", "Personal Project"],
-    idea: ["Idea", "Idea"],
-  },
-
   settings: {
     dailyLimit: ["每日任务上限", "Tasks per day"],
     myCalendars: ["我的日历", "My calendars"],
@@ -115,10 +109,8 @@ const DICT = {
     ],
     bankBalance: ["银行余额", "Bank balance"],
     runway: ["按必要开支还能撑（月）", "Months covered by essentials"],
-    ranking: [(y: number) => `钱去哪了 — ${y}`, (y: number) => `Where it went — ${y}`],
+    ranking: ["钱去哪了", "Where it went"],
   },
-
-  login: { placeholder: ["", ""] },
 } as const;
 
 type Dict = typeof DICT;

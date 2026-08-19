@@ -232,6 +232,13 @@ export interface RankRow {
   share: number;
 }
 
+/** 分析统一用同一个窗口：最近 12 个月 */
+export interface Window12 {
+  from: string;
+  to: string;
+  months: number;
+}
+
 export interface Baseline {
   /** 过去 12 个月里，每个 Detail 的月度中位数之和。中位数对一次性支出不敏感 */
   needs: number;
@@ -247,7 +254,7 @@ export interface Analysis {
   incomeMix: IncomeMix[];
   baseline: Baseline;
   ranking: RankRow[];
-  rankingYear: number;
+  window: Window12;
 }
 
 /** 稳定收入 = 每月都会来的那部分 */
@@ -290,9 +297,10 @@ export function buildAnalysis(
   cats: CategoryMap,
   rates: Record<string, number>,
   bank: number,
-  rankingYear: number,
 ): Analysis {
   const { months, detailGroup, keys } = monthlyMatrix(txns, cats, rates);
+  // 所有统计共用这一个窗口，口径才可比
+  const recent = keys.slice(-12);
 
   const groupOf = (detail: string) => detailGroup.get(detail)!;
   const sumWhere = (key: string, pred: (g: Group, d: string) => boolean) => {
@@ -327,7 +335,7 @@ export function buildAnalysis(
   }
 
   // ---- 收入构成 ----
-  const incomeMix: IncomeMix[] = keys.map((k) => ({
+  const incomeMix: IncomeMix[] = recent.map((k) => ({
     month: k,
     stable: sumWhere(k, (g, d) => g === "Income" && STABLE_INCOME.has(d)),
     temporary: sumWhere(k, (g, d) => g === "Income" && !STABLE_INCOME.has(d)),
@@ -336,7 +344,6 @@ export function buildAnalysis(
   // ---- 固定开支基线 ----
   // 用「每个 Detail 的月度中位数」之和，而不是平均：
   // 平均会被一次性大额（搬家、机票、补发）拉偏，中位数不会。
-  const recent = keys.slice(-12);
   const detailMedian = (pred: (g: Group) => boolean) => {
     let sum = 0;
     for (const [detail, group] of detailGroup) {
@@ -350,8 +357,7 @@ export function buildAnalysis(
 
   // ---- 分类排行 ----
   const totals = new Map<string, number>();
-  for (const k of keys) {
-    if (Number(k.slice(0, 4)) !== rankingYear) continue;
+  for (const k of recent) {
     for (const [detail, v] of months.get(k) ?? []) {
       if (groupOf(detail) === "Income") continue;
       totals.set(detail, (totals.get(detail) ?? 0) + v);
@@ -379,6 +385,10 @@ export function buildAnalysis(
       runwayMonths: needsBaseline > 0 ? bank / needsBaseline : null,
     },
     ranking,
-    rankingYear,
+    window: {
+      from: recent[0] ?? "",
+      to: recent.at(-1) ?? "",
+      months: recent.length,
+    },
   };
 }
