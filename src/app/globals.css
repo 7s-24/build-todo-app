@@ -1577,9 +1577,12 @@ button:focus {
 
 .trend {
   border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
 }
 
 .trend-row {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1598,15 +1601,20 @@ button:focus {
 }
 
 .trend-val {
-  margin-left: auto;
+  flex: none;
+  width: 108px;
+  text-align: right;
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
+/* 折线占满中间剩下的宽度，不再是固定 168px 后面拖一大片空白 */
 .spark {
-  flex: none;
-  overflow: visible;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 .spark-line {
@@ -1626,12 +1634,14 @@ button:focus {
 
 /* 收入构成：实心 = 稳定，空心 = 临时 */
 .mix {
+  flex: 1;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 2px;
   border: 1px solid var(--line);
   padding: 8px 8px 4px;
   overflow-x: auto;
+  min-height: 0;
 }
 
 .mix-col {
@@ -1640,11 +1650,13 @@ button:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .mix-bar {
   width: 100%;
-  height: 70px;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1865,16 +1877,55 @@ button:focus {
 /* 两块并排 */
 .lrow2 {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .lrow2 > * {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 700px) {
   .lrow2 {
     display: block;
+  }
+
+  /* 堆叠之后右边没有兄弟撑高度了，柱状图得自己给一个 */
+  .mix {
+    height: 120px;
+    flex: none;
+  }
+
+  /* 24 个月份标签在 375px 上挤不下，只留首尾说明区间 */
+  .mix-label {
+    display: none;
+  }
+
+  .mix-col:first-child .mix-label,
+  .mix-col:last-child .mix-label {
+    display: block;
+  }
+
+  /* 名称和数值一行，折线独占一行 —— 挤在同一行的话折线只剩 99px */
+  .trend-row {
+    flex-wrap: wrap;
+    gap: 0 10px;
+    padding: 6px 10px;
+  }
+
+  .trend-name {
+    width: auto;
+    flex: 1;
+  }
+
+  .trend-val {
+    width: auto;
+  }
+
+  .spark {
+    flex-basis: 100%;
+    order: 3;
   }
 }
