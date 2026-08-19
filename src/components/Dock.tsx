@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type { Priority } from "@/lib/types";
+import type { ISODate, Priority } from "@/lib/types";
 
 const LEVELS: Priority[] = [1, 2, 3];
 
 /**
  * 底部快速录入。三档只用颜色区分 —— 没有 "高/中/低" 这种标签。
- * 这里不指定日期，交给服务端按紧急程度自动落位。
+ * 日期留空就交给服务端按紧急程度自动落位；填了就直接钉在那天。
  */
 export default function Dock({
   priority,
@@ -16,15 +16,18 @@ export default function Dock({
 }: {
   priority: Priority;
   onPriority: (p: Priority) => void;
-  onAdd: (title: string, priority: Priority) => void;
+  onAdd: (title: string, priority: Priority, date?: ISODate) => void;
 }) {
   const [text, setText] = useState("");
+  const [date, setDate] = useState("");
 
   function submit() {
     const title = text.trim();
     if (!title) return;
-    onAdd(title, priority);
+    onAdd(title, priority, date || undefined);
     setText("");
+    // 日期不粘连：留空才是常态，钉住某天应该每次都是明确动作
+    setDate("");
   }
 
   return (
@@ -57,6 +60,12 @@ export default function Dock({
           e.preventDefault();
           submit();
         }}
+      />
+      <input
+        type="date"
+        className={`dock-date${date ? " is-set" : ""}`}
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
       />
     </form>
   );

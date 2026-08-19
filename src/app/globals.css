@@ -244,6 +244,30 @@ button:focus {
 .trow-text {
   flex: 1;
   word-break: break-word;
+  cursor: text; /* 光标形状就是「这里能改」的说明 */
+}
+
+.trow-input {
+  flex: 1;
+  border-bottom: 1px solid var(--fg);
+  padding: 0 0 1px;
+}
+
+/* 最晚完成日期：平时是灰的一行数字，晚了就染上档位色 */
+.trow-due {
+  flex: none;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.trow.is-late .trow-due {
+  color: var(--pc);
+}
+
+.trow.is-done .trow-due {
+  opacity: 0.35;
 }
 
 .trow.is-done .trow-text {
@@ -594,6 +618,22 @@ button:focus {
 
 .dock-input::placeholder {
   color: var(--line);
+}
+
+/* 日期没填时压到几乎看不见 —— 留空是常态，填了才该被看见 */
+.dock-date {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--line);
+}
+
+.dock-date.is-set {
+  color: var(--fg);
+}
+
+.dock-date:focus {
+  color: var(--fg);
 }
 
 /* ---------- 设置 ---------- */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Dock from "./Dock";
 import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
@@ -78,9 +78,27 @@ export default function App() {
     setSettings(data.settings);
   }, [range]);
 
+  const rolled = useRef(false);
+
   useEffect(() => {
-    void load();
-  }, [load]);
+    let alive = true;
+    (async () => {
+      // 每次打开先把过期未完成的任务顺延，再拉数据 ——
+      // 反过来会先闪一屏过期任务
+      if (!rolled.current) {
+        rolled.current = true;
+        await fetch("/api/rollover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ today }),
+        }).catch(() => {});
+      }
+      if (alive) await load();
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [load, today]);
 
   // 日历是「参考」，关掉时直接不拉，省得白跑一趟
   useEffect(() => {
@@ -164,6 +182,11 @@ export default function App() {
 
   const toggleTask = useCallback(
     (task: TaskDTO) => patchTask(task, { done: !task.done }),
+    [patchTask],
+  );
+
+  const renameTask = useCallback(
+    (task: TaskDTO, title: string) => patchTask(task, { title }),
     [patchTask],
   );
 
@@ -253,6 +276,7 @@ export default function App() {
           tasks={todayTasks}
           onToggle={toggleTask}
           onDelete={deleteTask}
+          onRename={renameTask}
           onMenu={(task, x, y) => setMenu({ task, x, y })}
         />
         <MonthGrid
@@ -275,7 +299,7 @@ export default function App() {
       <Dock
         priority={priority}
         onPriority={setPriority}
-        onAdd={(title, p) => addTask(title, p)}
+        onAdd={(title, p, date) => addTask(title, p, date)}
       />
 
       {menu && menuTask && (
