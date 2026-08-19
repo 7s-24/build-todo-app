@@ -60,9 +60,11 @@ const DICT = {
     txnCount: ["笔", "transactions"],
     rates: ["汇率", "rates"],
     noRows: ["这一格没有流水", "No transactions behind this cell"],
+    analysis: ["分析", "Analysis"],
+    unmappedShort: ["未映射的分类", "Unmapped categories"],
     unmapped: [
-      "未映射的分类 — 这些钱不会出现在任何一张表里",
-      "Unmapped categories — this money appears in no table",
+      "这些分类还没映射到 Group / Detail，它们的钱不会出现在任何一张表里。补上映射才会被算进去。",
+      "These categories have no Group / Detail mapping, so their money appears in no table. Map them and they get counted.",
     ],
     save: ["保存", "Save"],
     loadFailed: ["读取失败", "Failed to load"],

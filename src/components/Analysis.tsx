@@ -1,5 +1,6 @@
 "use client";
 
+import Hint from "./Hint";
 import Spark from "./Spark";
 import { useT } from "@/lib/i18n";
 import type { Analysis as A } from "@/lib/ledger";
@@ -16,10 +17,13 @@ export default function Analysis({ a }: { a: A }) {
 
   return (
     <>
-      {/* ---- 滚动 12 个月 ---- */}
+      {/* 两块信息密度都不高，并排放一排 */}
+      <div className="lrow2">
       <section className="lsec">
-        <h2>{t("analysis", "trailing")}</h2>
-        <p className="lnote">{t("analysis", "trailingNote")}</p>
+        <h2>
+          {t("analysis", "trailing")}
+          <Hint>{t("analysis", "trailingNote")}</Hint>
+        </h2>
         <div className="trend">
           {(
             [
@@ -57,10 +61,11 @@ export default function Analysis({ a }: { a: A }) {
         )}
       </section>
 
-      {/* ---- 收入构成 ---- */}
       <section className="lsec">
-        <h2>{t("analysis", "incomeMix")}</h2>
-        <p className="lnote">{t("analysis", "incomeMixNote")}</p>
+        <h2>
+          {t("analysis", "incomeMix")}
+          <Hint>{t("analysis", "incomeMixNote")}</Hint>
+        </h2>
         <div className="mix">
           {mix.map((m) => {
             const total = m.stable + m.temporary;
@@ -82,11 +87,14 @@ export default function Analysis({ a }: { a: A }) {
           })}
         </div>
       </section>
+      </div>
 
       {/* ---- 基线 ---- */}
       <section className="lsec">
-        <h2>{t("analysis", "baseline")}</h2>
-        <p className="lnote">{t("analysis", "baselineNote")(a.baseline.months)}</p>
+        <h2>
+          {t("analysis", "baseline")}
+          <Hint>{t("analysis", "baselineNote")(a.baseline.months)}</Hint>
+        </h2>
         <div className="stats">
           <div className="stat">
             <span className="stat-num">{yen(a.baseline.needs)}</span>

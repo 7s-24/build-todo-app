@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import AppSwitch from "./AppSwitch";
 import LangToggle from "./LangToggle";
 import Analysis from "./Analysis";
+import Collapse from "./Collapse";
+import Hint from "./Hint";
 import CellDetail from "./CellDetail";
 import { Chevron } from "./icons";
 import { useT } from "@/lib/i18n";
@@ -190,7 +192,10 @@ export default function Ledger() {
           </div>
         </section>
 
-        <Analysis a={data.analysis} />
+        {/* 统计不是每次打开都要看的东西，收起来，需要时展开 */}
+        <Collapse title={t("ledger", "analysis")}>
+          <Analysis a={data.analysis} />
+        </Collapse>
 
         {/* ---- 年度透视 ---- */}
         <section className="lsec">
@@ -336,7 +341,10 @@ function UnmappedFixer({ names, onDone }: { names: string[]; onDone: () => void 
 
   return (
     <section className="lsec unmapped">
-      <h2>{t("ledger", "unmapped")}</h2>
+      <h2>
+        {t("ledger", "unmappedShort")}
+        <Hint>{t("ledger", "unmapped")}</Hint>
+      </h2>
       <div className="unmapped-row">
         <select value={current} onChange={(e) => setCurrent(e.target.value)}>
           {names.map((n) => (

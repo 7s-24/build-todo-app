@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Hint from "./Hint";
 import { useLang, useT } from "@/lib/i18n";
 import type { FeedStatus, SettingsDTO } from "@/lib/types";
 
@@ -54,6 +55,7 @@ export default function Sheet({
         <div className="field">
           <label>
             {t("settings", "myCalendars")}
+            <Hint>{t("settings", "myHint")}</Hint>
             <Feeds status={feeds.own} />
           </label>
           <textarea
@@ -62,12 +64,12 @@ export default function Sheet({
             defaultValue={settings.icsUrls ?? ""}
             onBlur={(e) => onPatch({ icsUrls: e.target.value })}
           />
-          <div className="hint">{t("settings", "myHint")}</div>
         </div>
 
         <div className="field">
           <label>
             {t("settings", "sharedCalendars")}
+            <Hint>{t("settings", "sharedHint")}</Hint>
             <Feeds status={feeds.shared} />
           </label>
           <textarea
@@ -76,7 +78,6 @@ export default function Sheet({
             defaultValue={settings.sharedUrls ?? ""}
             onBlur={(e) => onPatch({ sharedUrls: e.target.value })}
           />
-          <div className="hint">{t("settings", "sharedHint")}</div>
         </div>
 
         <div className="field">
