@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-/** 两个页面的名字，写字是对的 —— 这是导航，不是状态 */
-const PAGES = [
-  { href: "/", label: "日程" },
-  { href: "/ledger", label: "账簿" },
-];
+import { useT } from "@/lib/i18n";
 
 export default function AppSwitch() {
   const path = usePathname();
+  const t = useT();
+  // 两个页面的名字，写字是对的 —— 这是导航，不是状态
+  const pages = [
+    { href: "/", label: t("nav", "schedule") },
+    { href: "/ledger", label: t("nav", "ledger") },
+  ];
   return (
     <nav className="appswitch">
-      {PAGES.map((p) => (
+      {pages.map((p) => (
         <Link
           key={p.href}
           href={p.href}

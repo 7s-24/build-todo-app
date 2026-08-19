@@ -1,4 +1,4 @@
-import { buildNetWorth, buildYear } from "@/lib/ledger";
+import { buildAnalysis, buildNetWorth, buildYear } from "@/lib/ledger";
 import { loadLedger } from "@/lib/ledgerServer";
 import { fail } from "@/lib/server";
 
@@ -27,15 +27,24 @@ export async function GET(req: Request) {
               : null,
     }));
 
+    const netWorth = buildNetWorth(
+      data.txns,
+      data.cats,
+      data.rates,
+      data.start.bank,
+      data.start.investment,
+    );
+
     return Response.json({
       years,
       report,
-      netWorth: buildNetWorth(
+      netWorth,
+      analysis: buildAnalysis(
         data.txns,
         data.cats,
         data.rates,
-        data.start.bank,
-        data.start.investment,
+        netWorth.at(-1)?.bank ?? 0,
+        year,
       ),
       rates: data.rates,
       unmapped: data.unmapped,

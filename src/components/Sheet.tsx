@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useLang, useT } from "@/lib/i18n";
 import type { FeedStatus, SettingsDTO } from "@/lib/types";
 
 /** 设置面板允许出现文字标签 —— 这里是配置，不是状态展示 */
@@ -24,6 +25,9 @@ export default function Sheet({
   onPatch: (patch: Partial<SettingsDTO>) => void;
   onClose: () => void;
 }) {
+  const t = useT();
+  const { lang, setLang } = useLang();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -37,7 +41,7 @@ export default function Sheet({
       <div className="sheet-mask" onClick={onClose} />
       <div className="sheet">
         <div className="field">
-          <label>每日任务上限</label>
+          <label>{t("settings", "dailyLimit")}</label>
           <input
             type="number"
             min={1}
@@ -49,7 +53,7 @@ export default function Sheet({
 
         <div className="field">
           <label>
-            我的日历
+            {t("settings", "myCalendars")}
             <Feeds status={feeds.own} />
           </label>
           <textarea
@@ -58,14 +62,12 @@ export default function Sheet({
             defaultValue={settings.icsUrls ?? ""}
             onBlur={(e) => onPatch({ icsUrls: e.target.value })}
           />
-          <div className="hint">
-            一行一个。Mac 日历 → 右键日历 → 共享设置 → 勾选「公开日历」 → 复制链接。
-          </div>
+          <div className="hint">{t("settings", "myHint")}</div>
         </div>
 
         <div className="field">
           <label>
-            他人日历
+            {t("settings", "sharedCalendars")}
             <Feeds status={feeds.shared} />
           </label>
           <textarea
@@ -74,22 +76,26 @@ export default function Sheet({
             defaultValue={settings.sharedUrls ?? ""}
             onBlur={(e) => onPatch({ sharedUrls: e.target.value })}
           />
-          <div className="hint">
-            家人等别人的日历，一行一个，和自己的分开开关。
-            Apple 同上；Google 日历 → 设置 → 选中该日历 → 「日历的秘密地址（iCal 格式）」。
-            对方把链接给你就行，两边都是只读订阅。
-          </div>
+          <div className="hint">{t("settings", "sharedHint")}</div>
         </div>
 
         <div className="field">
-          <label>皮肤</label>
+          <label>{t("settings", "language")}</label>
+          <select value={lang} onChange={(e) => setLang(e.target.value as "zh" | "en")}>
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div className="field">
+          <label>{t("settings", "theme")}</label>
           <select
             value={settings.theme}
             onChange={(e) => onPatch({ theme: e.target.value })}
           >
-            <option value="mono">黑白</option>
-            <option value="dark">反色</option>
-            <option value="auto">跟随系统</option>
+            <option value="mono">{t("settings", "themeMono")}</option>
+            <option value="dark">{t("settings", "themeDark")}</option>
+            <option value="auto">{t("settings", "themeAuto")}</option>
           </select>
         </div>
       </div>

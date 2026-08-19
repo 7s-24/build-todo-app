@@ -2,9 +2,8 @@
 
 import { useLayoutEffect, useRef } from "react";
 import TaskRow from "./TaskRow";
+import { useFmt } from "@/lib/useFmt";
 import type { ISODate, TaskDTO } from "@/lib/types";
-
-const WEEKDAY = ["日", "一", "二", "三", "四", "五", "六"];
 
 /**
  * 待办队列：按日期 + 档位排好的未完成任务。
@@ -31,6 +30,7 @@ export default function Sidebar({
   onMenu: (task: TaskDTO, x: number, y: number) => void;
 }) {
   const d = new Date(`${today}T00:00:00`);
+  const fmt = useFmt();
   const listRef = useRef<HTMLDivElement>(null);
 
   // 放不下的整行直接藏掉，不留半截被切开的文字
@@ -98,7 +98,7 @@ export default function Sidebar({
       <div className="today-head">
         <div className="today-num">{d.getDate()}</div>
         <div className="today-sub">
-          星期{WEEKDAY[d.getDay()]} · {d.getMonth() + 1}月
+          {fmt.weekday(d)} · {fmt.month(d)}
         </div>
       </div>
       <div className={`today-list${scroll ? " is-scroll" : ""}`} ref={listRef}>

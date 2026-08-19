@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 interface Row {
   occurredAt: string;
@@ -26,6 +27,7 @@ export default function CellDetail({
   group?: string;
   onClose: () => void;
 }) {
+  const t = useT();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [total, setTotal] = useState(0);
   const key = `${year}-${String(month).padStart(2, "0")}`;
@@ -69,7 +71,7 @@ export default function CellDetail({
 
         <div className="cd-body">
           {rows === null && <div className="today-empty" />}
-          {rows?.length === 0 && <div className="cd-none">这一格没有流水</div>}
+          {rows?.length === 0 && <div className="cd-none">{t("ledger", "noRows")}</div>}
           {rows?.map((r, i) => (
             <div className="cd-row" key={i}>
               <span className="cd-date">{r.occurredAt.slice(5, 10)}</span>

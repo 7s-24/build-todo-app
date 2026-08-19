@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { monthGrid } from "@/lib/date";
+import { useFmt } from "@/lib/useFmt";
 import type { CalEvent, ISODate, Priority, TaskDTO } from "@/lib/types";
 
-const WEEK = ["一", "二", "三", "四", "五", "六", "日"];
 /** 按住多久算「长按」而不是点击 */
 const HOLD_MS = 220;
 /** 长按成立前挪动超过这么多像素，就当成误触，不进入拖动 */
@@ -59,6 +59,12 @@ export default function MonthGrid({
   selected?: ISODate | null;
   onSelect?: (date: ISODate) => void;
 }) {
+  const fmt = useFmt();
+  // 周一起始的一周，用任意一个已知的周一去生成名字
+  const week = Array.from({ length: 7 }, (_, i) =>
+    fmt.weekday(new Date(2024, 0, 1 + i)),
+  );
+
   const [editing, setEditing] = useState<ISODate | null>(null);
   const [draft, setDraft] = useState("");
   const [drag, setDragState] = useState<Drag | null>(null);
@@ -174,7 +180,7 @@ export default function MonthGrid({
   return (
     <div className="month">
       <div className="week-head">
-        {WEEK.map((w) => (
+        {week.map((w) => (
           <span key={w}>{w}</span>
         ))}
       </div>

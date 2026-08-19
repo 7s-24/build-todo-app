@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import TaskRow from "./TaskRow";
+import { useFmt } from "@/lib/useFmt";
 import type { CalEvent, ISODate, Priority, TaskDTO } from "@/lib/types";
-
-const WEEKDAY = ["日", "一", "二", "三", "四", "五", "六"];
 
 /**
  * 手机月视图下半屏：被点中那天的详情。
@@ -40,6 +39,7 @@ export default function DayDetail({
   onLock: (date: ISODate, locked: boolean) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const fmt = useFmt();
   const d = new Date(`${date}T00:00:00`);
 
   function commit() {
@@ -53,9 +53,9 @@ export default function DayDetail({
     <section className={`detail${locked ? " is-locked" : ""}`}>
       <div className="detail-head">
         <span className="detail-date">
-          {d.getMonth() + 1}月{d.getDate()}日
+          {fmt.month(d)} {d.getDate()}
         </span>
-        <span className="detail-week">星期{WEEKDAY[d.getDay()]}</span>
+        <span className="detail-week">{fmt.weekday(d)}</span>
         <div className="bar-spacer" />
         {/* 锁定在这里是个看得见的开关，不用去猜长按 */}
         <button

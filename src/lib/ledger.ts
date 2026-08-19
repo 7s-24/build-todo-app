@@ -203,3 +203,182 @@ export function buildNetWorth(
       };
     });
 }
+
+/* ===========================================================
+   分析
+   =========================================================== */
+
+export interface TrendPoint {
+  month: string;
+  /** 截至该月的过去 12 个月合计 */
+  income: number;
+  needs: number;
+  wants: number;
+  investment: number;
+  savings: number;
+  savingsRate: number | null;
+}
+
+export interface IncomeMix {
+  month: string;
+  stable: number;
+  temporary: number;
+}
+
+export interface RankRow {
+  group: Group;
+  detail: string;
+  total: number;
+  share: number;
+}
+
+export interface Baseline {
+  /** 过去 12 个月里，每个 Detail 的月度中位数之和。中位数对一次性支出不敏感 */
+  needs: number;
+  discretionary: number;
+  /** 银行余额 ÷ 必要基线 = 还能撑几个月 */
+  runwayMonths: number | null;
+  bank: number;
+  months: number;
+}
+
+export interface Analysis {
+  trend: TrendPoint[];
+  incomeMix: IncomeMix[];
+  baseline: Baseline;
+  ranking: RankRow[];
+  rankingYear: number;
+}
+
+/** 稳定收入 = 每月都会来的那部分 */
+const STABLE_INCOME = new Set(["Salary", "Scholarship"]);
+
+function median(xs: number[]): number {
+  if (!xs.length) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+/** 把流水摊成「每月 x 每个 Detail」的方阵，后面几个统计都从这里长出来 */
+function monthlyMatrix(
+  txns: RawTxn[],
+  cats: CategoryMap,
+  rates: Record<string, number>,
+) {
+  const months = new Map<string, Map<string, number>>();
+  const detailGroup = new Map<string, Group>();
+
+  for (const t of txns) {
+    const map = cats[t.category];
+    if (!map) continue;
+    const key = monthKey(t.occurredAt);
+    let row = months.get(key);
+    if (!row) {
+      row = new Map();
+      months.set(key, row);
+    }
+    row.set(map.detail, (row.get(map.detail) ?? 0) + toJpy(t, rates));
+    detailGroup.set(map.detail, map.group);
+  }
+
+  return { months, detailGroup, keys: [...months.keys()].sort() };
+}
+
+export function buildAnalysis(
+  txns: RawTxn[],
+  cats: CategoryMap,
+  rates: Record<string, number>,
+  bank: number,
+  rankingYear: number,
+): Analysis {
+  const { months, detailGroup, keys } = monthlyMatrix(txns, cats, rates);
+
+  const groupOf = (detail: string) => detailGroup.get(detail)!;
+  const sumWhere = (key: string, pred: (g: Group, d: string) => boolean) => {
+    let s = 0;
+    for (const [detail, v] of months.get(key) ?? []) {
+      if (pred(groupOf(detail), detail)) s += v;
+    }
+    return s;
+  };
+
+  // ---- 滚动 12 个月 ----
+  const trend: TrendPoint[] = [];
+  for (let i = 11; i < keys.length; i++) {
+    const window = keys.slice(i - 11, i + 1);
+    const agg = (pred: (g: Group, d: string) => boolean) =>
+      window.reduce((s, k) => s + sumWhere(k, pred), 0);
+
+    const income = agg((g) => g === "Income");
+    const needs = agg((g) => g === "Needs");
+    const wants = agg((g) => g === "Wants");
+    const investment = agg((g) => g === "Investment");
+    const spending = agg((g) => g !== "Income");
+    trend.push({
+      month: keys[i],
+      income,
+      needs,
+      wants,
+      investment,
+      savings: income + spending,
+      savingsRate: income === 0 ? null : (income + spending) / income,
+    });
+  }
+
+  // ---- 收入构成 ----
+  const incomeMix: IncomeMix[] = keys.map((k) => ({
+    month: k,
+    stable: sumWhere(k, (g, d) => g === "Income" && STABLE_INCOME.has(d)),
+    temporary: sumWhere(k, (g, d) => g === "Income" && !STABLE_INCOME.has(d)),
+  }));
+
+  // ---- 固定开支基线 ----
+  // 用「每个 Detail 的月度中位数」之和，而不是平均：
+  // 平均会被一次性大额（搬家、机票、补发）拉偏，中位数不会。
+  const recent = keys.slice(-12);
+  const detailMedian = (pred: (g: Group) => boolean) => {
+    let sum = 0;
+    for (const [detail, group] of detailGroup) {
+      if (!pred(group)) continue;
+      sum += median(recent.map((k) => months.get(k)?.get(detail) ?? 0));
+    }
+    return sum;
+  };
+  const needsBaseline = -detailMedian((g) => g === "Needs");
+  const discretionary = -detailMedian((g) => g === "Wants" || g === "Family & Gifts");
+
+  // ---- 分类排行 ----
+  const totals = new Map<string, number>();
+  for (const k of keys) {
+    if (Number(k.slice(0, 4)) !== rankingYear) continue;
+    for (const [detail, v] of months.get(k) ?? []) {
+      if (groupOf(detail) === "Income") continue;
+      totals.set(detail, (totals.get(detail) ?? 0) + v);
+    }
+  }
+  const spendTotal = [...totals.values()].reduce((a, b) => a + b, 0);
+  const ranking: RankRow[] = [...totals.entries()]
+    .filter(([, v]) => v !== 0)
+    .map(([detail, total]) => ({
+      group: groupOf(detail),
+      detail,
+      total,
+      share: spendTotal === 0 ? 0 : total / spendTotal,
+    }))
+    .sort((a, b) => a.total - b.total); // 支出是负数，最负的排最前
+
+  return {
+    trend,
+    incomeMix,
+    baseline: {
+      needs: needsBaseline,
+      discretionary,
+      bank,
+      months: recent.length,
+      runwayMonths: needsBaseline > 0 ? bank / needsBaseline : null,
+    },
+    ranking,
+    rankingYear,
+  };
+}

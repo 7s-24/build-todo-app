@@ -7,11 +7,13 @@ import Sheet from "./Sheet";
 import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
 import AppSwitch from "./AppSwitch";
+import LangToggle from "./LangToggle";
 import DayDetail from "./DayDetail";
 import Projects from "./Projects";
 import { CalIcon, Chevron, FlagIcon, GearIcon, GridIcon, ListIcon, SharedCalIcon } from "./icons";
 import { monthGrid, shift, todayLocal } from "@/lib/date";
 import { useCompact } from "@/lib/useCompact";
+import { useFmt } from "@/lib/useFmt";
 import type {
   CalEvent,
   ProjectDTO,
@@ -72,6 +74,7 @@ export default function App() {
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
   const compact = useCompact();
+  const fmt = useFmt();
   // 手机上队列和月视图分成两个 tab，队列是默认那个
   const [view, setView] = useState<"queue" | "month" | "projects">("queue");
   const [selected, setSelected] = useState<ISODate>(() => todayLocal());
@@ -373,7 +376,8 @@ export default function App() {
               <Chevron dir="right" />
             </button>
             <div className="bar-title">
-              {cursor.month + 1}月{!compact && <em>{cursor.year}</em>}
+              {fmt.monthOfIndex(cursor.month)}
+              {!compact && <em>{cursor.year}</em>}
             </div>
           </>
         )}
@@ -398,6 +402,7 @@ export default function App() {
           </>
         )}
 
+        <LangToggle />
         <button className="icon-btn" onClick={() => setSheet(true)}>
           <GearIcon />
         </button>

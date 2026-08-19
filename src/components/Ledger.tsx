@@ -2,9 +2,18 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import AppSwitch from "./AppSwitch";
+import LangToggle from "./LangToggle";
+import Analysis from "./Analysis";
 import CellDetail from "./CellDetail";
 import { Chevron } from "./icons";
-import { GROUP_ORDER, type Group, type NetWorthRow, type YearReport } from "@/lib/ledger";
+import { useT } from "@/lib/i18n";
+import {
+  GROUP_ORDER,
+  type Analysis as AnalysisData,
+  type Group,
+  type NetWorthRow,
+  type YearReport,
+} from "@/lib/ledger";
 
 const MONTHS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 
@@ -12,6 +21,7 @@ interface Payload {
   years: number[];
   report: YearReport;
   netWorth: NetWorthRow[];
+  analysis: AnalysisData;
   rates: Record<string, number>;
   unmapped: string[];
   count: number;
@@ -34,12 +44,13 @@ export default function Ledger() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [cell, setCell] = useState<{ month: number; detail?: string; group?: string } | null>(null);
+  const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (y?: number) => {
     const res = await fetch(`/api/ledger${y ? `?year=${y}` : ""}`);
     if (!res.ok) {
-      setMessage("读取失败");
+      setMessage(t("ledger", "loadFailed"));
       return;
     }
     const d: Payload = await res.json();
@@ -62,13 +73,13 @@ export default function Ledger() {
     const r = await res.json();
     setBusy(false);
     if (!res.ok) {
-      setMessage(r.error ?? "导入失败");
+      setMessage(r.error ?? t("ledger", "importFailed"));
       return;
     }
     setMessage(
-      `解析 ${r.parsed} 行：新增 ${r.added}，重复跳过 ${r.skipped}` +
-        (r.badRows?.length ? `，${r.badRows.length} 行解析不了` : "") +
-        (r.unmapped?.length ? `。未映射分类：${r.unmapped.join("、")}` : ""),
+      t("ledger", "importResult")(r.parsed, r.added, r.skipped) +
+        (r.badRows?.length ? t("ledger", "importBad")(r.badRows.length) : "") +
+        (r.unmapped?.length ? t("ledger", "importUnmapped")(r.unmapped.join("、")) : ""),
     );
     await load(year ?? undefined);
   }
@@ -107,8 +118,9 @@ export default function Ledger() {
         </button>
         <div className="bar-title">{report.year}</div>
         <div className="bar-spacer" />
+        <LangToggle />
         <button className="import-btn" onClick={() => fileRef.current?.click()}>
-          {busy ? "…" : "导入 CSV"}
+          {busy ? "…" : t("ledger", "import")}
         </button>
         <input
           ref={fileRef}
@@ -132,13 +144,13 @@ export default function Ledger() {
 
         {/* ---- 占收入比例 ---- */}
         <section className="lsec">
-          <h2>Overview — % of income</h2>
+          <h2>{t("ledger", "overview")}</h2>
           <div className="tscroll">
             <table className="ltable">
               <thead>
                 <tr>
-                  <th className="lname">Group</th>
-                  <th className="lnum">Target</th>
+                  <th className="lname">{t("ledger", "group")}</th>
+                  <th className="lnum">{t("ledger", "target")}</th>
                   {MONTHS.map((m) => (
                     <th className="lnum" key={m}>{m}</th>
                   ))}
@@ -165,7 +177,7 @@ export default function Ledger() {
                   </tr>
                 ))}
                 <tr className="lrow-strong">
-                  <td className="lname">Savings rate</td>
+                  <td className="lname">{t("ledger", "savingsRate")}</td>
                   <td className="lnum" />
                   {report.savingsRate.map((v, i) => (
                     <td className={`lnum${v !== null && v < 0 ? " is-over" : ""}`} key={i}>
@@ -178,6 +190,8 @@ export default function Ledger() {
           </div>
         </section>
 
+        <Analysis a={data.analysis} />
+
         {/* ---- 年度透视 ---- */}
         <section className="lsec">
           <h2>{report.year}</h2>
@@ -185,11 +199,11 @@ export default function Ledger() {
             <table className="ltable">
               <thead>
                 <tr>
-                  <th className="lname">Detail</th>
+                  <th className="lname">{t("ledger", "detail")}</th>
                   {MONTHS.map((m) => (
                     <th className="lnum" key={m}>{m}</th>
                   ))}
-                  <th className="lnum">Total</th>
+                  <th className="lnum">{t("ledger", "total")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,14 +245,14 @@ export default function Ledger() {
                   );
                 })}
                 <tr className="lrow-strong">
-                  <td className="lname">SPENDING TOTAL</td>
+                  <td className="lname">{t("ledger", "spendingTotal")}</td>
                   {report.spending.map((v, i) => (
                     <td className="lnum" key={i}>{yen(v)}</td>
                   ))}
                   <td className="lnum">{yen(report.spendingTotal)}</td>
                 </tr>
                 <tr className="lrow-strong">
-                  <td className="lname">SAVINGS</td>
+                  <td className="lname">{t("ledger", "savings")}</td>
                   {report.savings.map((v, i) => (
                     <td className={`lnum${v < 0 ? " is-over" : ""}`} key={i}>{yen(v)}</td>
                   ))}
@@ -253,17 +267,17 @@ export default function Ledger() {
 
         {/* ---- 净值 ---- */}
         <section className="lsec">
-          <h2>Net worth — bank + investment</h2>
+          <h2>{t("ledger", "netWorth")}</h2>
           <div className="tscroll">
             <table className="ltable">
               <thead>
                 <tr>
-                  <th className="lname">Month</th>
-                  <th className="lnum">Savings</th>
-                  <th className="lnum">NISA added</th>
-                  <th className="lnum">Bank</th>
-                  <th className="lnum">Investment</th>
-                  <th className="lnum">Net worth</th>
+                  <th className="lname">{t("ledger", "month")}</th>
+                  <th className="lnum">{t("ledger", "savings")}</th>
+                  <th className="lnum">{t("ledger", "nisaAdded")}</th>
+                  <th className="lnum">{t("ledger", "bank")}</th>
+                  <th className="lnum">{t("ledger", "investment")}</th>
+                  <th className="lnum">{t("ledger", "net")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,7 +297,7 @@ export default function Ledger() {
         </section>
 
         <div className="ledger-foot">
-          {data.count} 笔 · 汇率{" "}
+          {data.count} {t("ledger", "txnCount")} · {t("ledger", "rates")}{" "}
           {Object.entries(data.rates)
             .filter(([c]) => c !== "日元")
             .map(([c, r]) => `${c} ${r}`)
@@ -304,6 +318,7 @@ export default function Ledger() {
 }
 
 function UnmappedFixer({ names, onDone }: { names: string[]; onDone: () => void }) {
+  const t = useT();
   const [group, setGroup] = useState<Group>("Needs");
   const [detail, setDetail] = useState("");
   const [current, setCurrent] = useState(names[0]);
@@ -321,7 +336,7 @@ function UnmappedFixer({ names, onDone }: { names: string[]; onDone: () => void 
 
   return (
     <section className="lsec unmapped">
-      <h2>未映射的分类 — 这些钱不会出现在任何一张表里</h2>
+      <h2>{t("ledger", "unmapped")}</h2>
       <div className="unmapped-row">
         <select value={current} onChange={(e) => setCurrent(e.target.value)}>
           {names.map((n) => (
@@ -341,7 +356,7 @@ function UnmappedFixer({ names, onDone }: { names: string[]; onDone: () => void 
             if (e.key === "Enter" && !e.nativeEvent.isComposing) void save();
           }}
         />
-        <button onClick={save}>保存</button>
+        <button onClick={save}>{t("ledger", "save")}</button>
       </div>
     </section>
   );
