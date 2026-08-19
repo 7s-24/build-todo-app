@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { SettingsDTO } from "@/lib/types";
 
 /** 设置面板允许出现文字标签 —— 这里是配置，不是状态展示 */
@@ -12,6 +13,14 @@ export default function Sheet({
   onPatch: (patch: Partial<SettingsDTO>) => void;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <>
       <div className="sheet-mask" onClick={onClose} />

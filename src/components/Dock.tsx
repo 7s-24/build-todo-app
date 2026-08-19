@@ -20,15 +20,19 @@ export default function Dock({
 }) {
   const [text, setText] = useState("");
 
+  function submit() {
+    const title = text.trim();
+    if (!title) return;
+    onAdd(title, priority);
+    setText("");
+  }
+
   return (
     <form
       className="dock"
       onSubmit={(e) => {
         e.preventDefault();
-        const title = text.trim();
-        if (!title) return;
-        onAdd(title, priority);
-        setText("");
+        submit();
       }}
     >
       <div className="picker">
@@ -47,6 +51,12 @@ export default function Dock({
         value={text}
         placeholder="—"
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          // 中文输入法里回车是「确认候选词」，不能当成提交
+          if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+          e.preventDefault();
+          submit();
+        }}
       />
     </form>
   );

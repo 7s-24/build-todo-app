@@ -110,7 +110,10 @@ export default function MonthGrid({
                     onChange={(e) => setDraft(e.target.value)}
                     onBlur={() => commit(date)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") commit(date);
+                      // 输入法组词途中的回车只是确认候选词，不是提交
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                        commit(date);
+                      }
                       if (e.key === "Escape") {
                         setDraft("");
                         setEditing(null);
