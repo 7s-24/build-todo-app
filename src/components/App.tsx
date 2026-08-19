@@ -9,6 +9,7 @@ import { CalIcon, Chevron, GearIcon } from "./icons";
 import { monthGrid, todayLocal } from "@/lib/date";
 import type {
   CalEvent,
+  CalendarResult,
   ISODate,
   Priority,
   SettingsDTO,
@@ -18,7 +19,7 @@ import type {
 
 const DEFAULT_SETTINGS: SettingsDTO = {
   dailyLimit: 5,
-  icsUrl: null,
+  icsUrls: null,
   showCalendar: true,
   theme: "mono",
 };
@@ -54,6 +55,7 @@ export default function App() {
   const [locked, setLocked] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<SettingsDTO>(DEFAULT_SETTINGS);
   const [events, setEvents] = useState<CalEvent[]>([]);
+  const [feeds, setFeeds] = useState({ ok: 0, total: 0 });
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
 
@@ -80,19 +82,26 @@ export default function App() {
 
   // 日历是「参考」，关掉时直接不拉，省得白跑一趟
   useEffect(() => {
-    if (!settings.showCalendar || !settings.icsUrl) {
+    if (!settings.showCalendar || !settings.icsUrls) {
       setEvents([]);
       return;
     }
     let alive = true;
-    fetch(`/api/calendar?start=${range.start}&end=${range.end}`)
-      .then((r) => (r.ok ? r.json() : { events: [] }))
-      .then((d) => alive && setEvents(d.events ?? []))
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    fetch(
+      `/api/calendar?start=${range.start}&end=${range.end}&tz=${encodeURIComponent(tz)}`,
+    )
+      .then((r) => (r.ok ? r.json() : { events: [], ok: 0, total: 0 }))
+      .then((d: CalendarResult) => {
+        if (!alive) return;
+        setEvents(d.events ?? []);
+        setFeeds({ ok: d.ok ?? 0, total: d.total ?? 0 });
+      })
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [range, settings.showCalendar, settings.icsUrl]);
+  }, [range, settings.showCalendar, settings.icsUrls]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
@@ -251,6 +260,7 @@ export default function App() {
       {sheet && (
         <Sheet
           settings={settings}
+          feeds={feeds}
           onPatch={patchSettings}
           onClose={() => setSheet(false)}
         />

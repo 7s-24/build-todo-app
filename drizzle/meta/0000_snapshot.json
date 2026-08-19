@@ -1,5 +1,5 @@
 {
-  "id": "d727a301-d780-4c71-a39a-f62cd9772300",
+  "id": "2b0fe41d-74dc-4eec-94cf-436d8849f25b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -48,8 +48,8 @@
           "notNull": true,
           "default": 5
         },
-        "ics_url": {
-          "name": "ics_url",
+        "ics_urls": {
+          "name": "ics_urls",
           "type": "text",
           "primaryKey": false,
           "notNull": false

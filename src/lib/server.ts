@@ -22,7 +22,7 @@ export async function ensureSettings(): Promise<SettingsDTO> {
     const s = found[0];
     return {
       dailyLimit: s.dailyLimit,
-      icsUrl: s.icsUrl,
+      icsUrls: s.icsUrls,
       showCalendar: s.showCalendar,
       theme: s.theme,
     };
@@ -30,7 +30,7 @@ export async function ensureSettings(): Promise<SettingsDTO> {
   const [created] = await db.insert(settings).values({ id: 1 }).returning();
   return {
     dailyLimit: created.dailyLimit,
-    icsUrl: created.icsUrl,
+    icsUrls: created.icsUrls,
     showCalendar: created.showCalendar,
     theme: created.theme,
   };

@@ -6,7 +6,7 @@ CREATE TABLE "days" (
 CREATE TABLE "settings" (
 	"id" integer PRIMARY KEY DEFAULT 1 NOT NULL,
 	"daily_limit" integer DEFAULT 5 NOT NULL,
-	"ics_url" text,
+	"ics_urls" text,
 	"show_calendar" boolean DEFAULT true NOT NULL,
 	"theme" text DEFAULT 'mono' NOT NULL
 );

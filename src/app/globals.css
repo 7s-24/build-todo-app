@@ -530,15 +530,36 @@ button:focus {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   border-bottom: 1px solid var(--line);
   padding: 4px 0;
   width: 100%;
 }
 
 .field input:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
   border-bottom-color: var(--fg);
+}
+
+.field textarea {
+  resize: vertical;
+  font-size: 11px;
+  line-height: 1.5;
+  word-break: break-all;
+  border: 1px solid var(--line);
+  padding: 5px;
+}
+
+/* 源的连通情况，例如 3/3；有源拉不到时变紧急色 */
+.feeds {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.feeds.is-bad {
+  color: var(--p1);
 }
 
 .hint {

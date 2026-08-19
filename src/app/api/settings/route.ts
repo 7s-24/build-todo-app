@@ -24,8 +24,15 @@ export async function PATCH(req: Request) {
     }
     if (typeof body.showCalendar === "boolean") patch.showCalendar = body.showCalendar;
     if (typeof body.theme === "string" && body.theme) patch.theme = body.theme;
-    if (typeof body.icsUrl === "string") {
-      patch.icsUrl = body.icsUrl.trim() || null;
+    if (typeof body.icsUrls === "string") {
+      // 逐行清洗，顺手去掉空行和重复
+      const list = [...new Set(
+        body.icsUrls
+          .split("\n")
+          .map((u: string) => u.trim())
+          .filter(Boolean),
+      )];
+      patch.icsUrls = list.length ? list.join("\n") : null;
     }
     if (!Object.keys(patch).length) return bad("没有可更新的字段");
 
@@ -37,7 +44,7 @@ export async function PATCH(req: Request) {
 
     return Response.json({
       dailyLimit: row.dailyLimit,
-      icsUrl: row.icsUrl,
+      icsUrls: row.icsUrls,
       showCalendar: row.showCalendar,
       theme: row.theme,
     });

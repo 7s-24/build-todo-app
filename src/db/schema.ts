@@ -32,7 +32,8 @@ export const days = pgTable("days", {
 export const settings = pgTable("settings", {
   id: integer("id").primaryKey().default(1),
   dailyLimit: integer("daily_limit").notNull().default(5),
-  icsUrl: text("ics_url"),
+  /** 一行一个订阅地址 */
+  icsUrls: text("ics_urls"),
   showCalendar: boolean("show_calendar").notNull().default(true),
   theme: text("theme").notNull().default("mono"),
 });

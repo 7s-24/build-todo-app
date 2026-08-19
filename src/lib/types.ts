@@ -14,9 +14,16 @@ export interface TaskDTO {
 
 export interface SettingsDTO {
   dailyLimit: number;
-  icsUrl: string | null;
+  icsUrls: string | null; // 一行一个
   showCalendar: boolean;
   theme: string;
+}
+
+/** 拉了几个源、成了几个 —— 让设置面板能显示 "2/3" 这种 */
+export interface CalendarResult {
+  events: CalEvent[];
+  ok: number;
+  total: number;
 }
 
 export interface CalEvent {
