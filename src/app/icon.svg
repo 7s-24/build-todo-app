@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    月视图的缩影：九格网格，中间一格实心，就是界面上「今天」那个反白方块。
+    小尺寸下描边会糊，所以九格全用实色块，靠深浅拉开层次。无圆角，同一条规矩。
+
+    取色沿用界面令牌：其余八格用 muted 灰，黑底白底上都看得见，
+    所以浏览器就算不认 SVG 里的 prefers-color-scheme，图形照样成立，
+    只有「今天」那格跟着主题翻转。
+    （注意：XML 注释里不能出现连续两个连字符，所以这里不写令牌的原名。）
+  -->
+  <style>
+    .g { fill: #8a8a8a; }
+    .t { fill: #111111; }
+    @media (prefers-color-scheme: dark) {
+      .t { fill: #f5f5f5; }
+    }
+  </style>
+  <rect class="g" x="2"  y="2"  width="8" height="8"/>
+  <rect class="g" x="12" y="2"  width="8" height="8"/>
+  <rect class="g" x="22" y="2"  width="8" height="8"/>
+  <rect class="g" x="2"  y="12" width="8" height="8"/>
+  <rect class="t" x="12" y="12" width="8" height="8"/>
+  <rect class="g" x="22" y="12" width="8" height="8"/>
+  <rect class="g" x="2"  y="22" width="8" height="8"/>
+  <rect class="g" x="12" y="22" width="8" height="8"/>
+  <rect class="g" x="22" y="22" width="8" height="8"/>
+</svg>
