@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Hint from "./Hint";
+import Trash from "./Trash";
 import { useLang, useT } from "@/lib/i18n";
 import type { FeedStatus, SettingsDTO } from "@/lib/types";
 
@@ -20,11 +21,13 @@ export default function Sheet({
   feeds,
   onPatch,
   onClose,
+  onRestored,
 }: {
   settings: SettingsDTO;
   feeds: { own: FeedStatus; shared: FeedStatus };
   onPatch: (patch: Partial<SettingsDTO>) => void;
   onClose: () => void;
+  onRestored: () => void;
 }) {
   const t = useT();
   const { lang, setLang } = useLang();
@@ -87,6 +90,8 @@ export default function Sheet({
             <option value="en">English</option>
           </select>
         </div>
+
+        <Trash onRestored={onRestored} />
 
         <div className="field">
           <label>{t("settings", "theme")}</label>

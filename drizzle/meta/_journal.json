@@ -43,6 +43,13 @@
       "when": 1787148058946,
       "tag": "0005_moaning_wolfpack",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787151600620,
+      "tag": "0006_absent_dust",
+      "breakpoints": true
     }
   ]
 }

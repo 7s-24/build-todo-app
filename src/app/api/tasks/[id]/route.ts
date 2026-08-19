@@ -45,11 +45,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
 }
 
+/** 不真删 —— 打上时间戳进回收站，误删要能捞回来 */
 export async function DELETE(_req: Request, ctx: Ctx) {
   try {
     const id = Number((await ctx.params).id);
     if (!Number.isFinite(id)) return bad("非法 id");
-    await getDb().delete(tasks).where(eq(tasks.id, id));
+    await getDb()
+      .update(tasks)
+      .set({ deletedAt: new Date() })
+      .where(eq(tasks.id, id));
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);

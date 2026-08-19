@@ -33,6 +33,12 @@ const DICT = {
     themeDark: ["反色", "Inverted"],
     themeAuto: ["跟随系统", "System"],
     language: ["语言", "Language"],
+    trash: ["回收站", "Trash"],
+    trashEmpty: ["空的", "Empty"],
+    trashHint: [
+      "删掉的任务和项目会先进这里，不会立刻消失。点箭头放回原处 —— 任务回到它原本排的那一天，项目回到原来的分组。",
+      "Deleted tasks and projects land here instead of disappearing. The arrow puts one back where it was — a task returns to the day it was scheduled on, a project to its group.",
+    ],
   },
 
   ledger: {

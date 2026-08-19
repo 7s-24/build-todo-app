@@ -124,16 +124,14 @@ export default function App() {
   }, [load, today]);
 
   // 项目面板和日期无关，挂载时拉一次就够
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/projects")
-      .then((r) => (r.ok ? r.json() : { projects: [] }))
-      .then((d) => alive && setProjects(d.projects ?? []))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
+  const reloadProjects = useCallback(async () => {
+    const res = await fetch("/api/projects");
+    if (res.ok) setProjects((await res.json()).projects ?? []);
   }, []);
+
+  useEffect(() => {
+    void reloadProjects();
+  }, [reloadProjects]);
 
   // 两组日历一次拉完、都带标记，显示与否在渲染时过滤 ——
   // 开关因此是即时的，不用等网络
@@ -493,6 +491,10 @@ export default function App() {
           feeds={feeds}
           onPatch={patchSettings}
           onClose={() => setSheet(false)}
+          onRestored={() => {
+            void load();
+            void reloadProjects();
+          }}
         />
       )}
     </div>

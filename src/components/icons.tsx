@@ -140,6 +140,15 @@ export function UploadIcon() {
   );
 }
 
+/** 还原：箭头指回去 */
+export function RestoreIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+      <path d="M11 6H2.2M5.4 2.4L1.6 6l3.8 3.6" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
 export function XIcon() {
   return (
     <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>

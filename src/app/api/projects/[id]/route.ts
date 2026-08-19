@@ -36,7 +36,11 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   try {
     const id = Number((await ctx.params).id);
     if (!Number.isFinite(id)) return bad("非法 id");
-    await getDb().delete(projects).where(eq(projects.id, id));
+    // 不真删 —— 打上时间戳进回收站
+    await getDb()
+      .update(projects)
+      .set({ deletedAt: new Date() })
+      .where(eq(projects.id, id));
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);

@@ -1,4 +1,4 @@
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, isNull, lt } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { tasks } from "@/db/schema";
 import { bad, fail } from "@/lib/server";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const moved = await getDb()
       .update(tasks)
       .set({ date: today })
-      .where(and(lt(tasks.date, today), eq(tasks.done, false)))
+      .where(and(lt(tasks.date, today), eq(tasks.done, false), isNull(tasks.deletedAt)))
       .returning({ id: tasks.id });
 
     return Response.json({ moved: moved.length });

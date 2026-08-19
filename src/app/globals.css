@@ -1946,3 +1946,79 @@ button:focus {
     order: 3;
   }
 }
+
+
+/* ---------- 回收站 ---------- */
+
+.trash {
+  border: 1px solid var(--line);
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.trash-empty {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 11.5px;
+}
+
+.trash-row:last-child {
+  border-bottom: none;
+}
+
+.trash-row:hover {
+  background: var(--faint);
+}
+
+/* 空心 = 任务，实心 = 项目。不写「任务」「项目」两个词 */
+.trash-kind {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
+
+.trash-kind.is-project {
+  background: var(--muted);
+}
+
+.trash-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trash-meta {
+  flex: none;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trash-restore {
+  flex: none;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.trash-restore:hover {
+  color: var(--fg);
+}
+
+@media (max-width: 700px) {
+  .trash-row {
+    font-size: 13px;
+    padding: 9px 8px;
+  }
+}

@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, isNull } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { projects } from "@/db/schema";
 import { bad, fail, isKind, projectDTO } from "@/lib/server";
@@ -10,6 +10,7 @@ export async function GET() {
     const rows = await getDb()
       .select()
       .from(projects)
+      .where(isNull(projects.deletedAt))
       .orderBy(asc(projects.position), asc(projects.id));
     return Response.json({ projects: rows.map(projectDTO) });
   } catch (e) {

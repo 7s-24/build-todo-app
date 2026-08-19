@@ -1,4 +1,4 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { days, projects, settings, tasks } from "@/db/schema";
 import type { Priority, ProjectDTO, ProjectKind, SettingsDTO, TaskDTO } from "./types";
@@ -81,7 +81,7 @@ export async function openCountsFrom(start: string) {
   const rows = await db
     .select({ date: tasks.date })
     .from(tasks)
-    .where(and(gte(tasks.date, start), eq(tasks.done, false)));
+    .where(and(gte(tasks.date, start), eq(tasks.done, false), isNull(tasks.deletedAt)));
   const counts: Record<string, number> = {};
   for (const r of rows) counts[r.date] = (counts[r.date] ?? 0) + 1;
   return counts;

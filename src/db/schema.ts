@@ -22,6 +22,8 @@ export const tasks = pgTable("tasks", {
   done: boolean("done").notNull().default(false),
   doneAt: timestamp("done_at", { withTimezone: true }),
   position: integer("position").notNull().default(0),
+  /** 软删除。删掉的东西要能捞回来，所以只打标记不真删 */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -56,6 +58,7 @@ export const projects = pgTable("projects", {
   /** funded | personal | idea */
   kind: text("kind").notNull().default("idea"),
   position: integer("position").notNull().default(0),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -1,4 +1,4 @@
-import { and, asc, gte, lte } from "drizzle-orm";
+import { and, asc, gte, isNull, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { tasks } from "@/db/schema";
 import { bad, ensureSettings, fail, lockedBetween, toDTO } from "@/lib/server";
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       db
         .select()
         .from(tasks)
-        .where(and(gte(tasks.date, start), lte(tasks.date, end)))
+        .where(and(gte(tasks.date, start), lte(tasks.date, end), isNull(tasks.deletedAt)))
         .orderBy(asc(tasks.date), asc(tasks.priority), asc(tasks.position), asc(tasks.id)),
       lockedBetween(start, end),
       ensureSettings(),
