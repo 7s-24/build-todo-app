@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "todo",
-  description: "每日 to-do",
+  title: "日程",
+  description: "每日待办与月视图",
 };
 
 export const viewport: Viewport = {

@@ -1,8 +1,8 @@
 export const COOKIE = "mn_auth";
 
 /**
- * 单用户口令。没设 APP_PASSWORD 就等于不开鉴权（本地开发用）。
- * cookie 里存的是摘要，不是明文口令。
+ * 单用户口令的摘要。cookie 里存的是它，不是明文口令。
+ * 换了 APP_PASSWORD 摘要就变，所有旧 cookie 自动失效。
  */
 export async function tokenFor(password: string): Promise<string> {
   const data = new TextEncoder().encode(`mn:${password}`);
@@ -10,8 +10,4 @@ export async function tokenFor(password: string): Promise<string> {
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-}
-
-export function authDisabled(): boolean {
-  return !process.env.APP_PASSWORD;
 }
