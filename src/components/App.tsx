@@ -6,7 +6,8 @@ import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
 import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
-import { CalIcon, Chevron, GearIcon, SharedCalIcon } from "./icons";
+import DayDetail from "./DayDetail";
+import { CalIcon, Chevron, GearIcon, GridIcon, ListIcon, SharedCalIcon } from "./icons";
 import { monthGrid, shift, todayLocal } from "@/lib/date";
 import { useCompact } from "@/lib/useCompact";
 import type {
@@ -67,6 +68,9 @@ export default function App() {
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
   const compact = useCompact();
+  // 手机上队列和月视图分成两个 tab，队列是默认那个
+  const [view, setView] = useState<"queue" | "month">("queue");
+  const [selected, setSelected] = useState<ISODate>(() => todayLocal());
   const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
 
   // 窗口 = 当前月视图 ∪ [今天, 今天+180天]。
@@ -271,6 +275,8 @@ export default function App() {
     [tasks],
   );
 
+  const showMonth = !compact || view === "month";
+
   function step(delta: number) {
     setCursor((c) => {
       const m = c.month + delta;
@@ -284,42 +290,75 @@ export default function App() {
   return (
     <div className="app">
       <header className="bar">
-        <button className="nav" onClick={() => step(-1)}>
-          <Chevron dir="left" />
-        </button>
-        <button className="nav" onClick={() => step(1)}>
-          <Chevron dir="right" />
-        </button>
-        <div className="bar-title">
-          {cursor.month + 1}月<em>{cursor.year}</em>
-        </div>
+        {compact && (
+          <div className="tabs">
+            <button
+              className={`tab-btn${view === "queue" ? " is-on" : ""}`}
+              onClick={() => setView("queue")}
+            >
+              <ListIcon />
+            </button>
+            <button
+              className={`tab-btn${view === "month" ? " is-on" : ""}`}
+              onClick={() => setView("month")}
+            >
+              <GridIcon />
+            </button>
+          </div>
+        )}
+
+        {showMonth && (
+          <>
+            <button className="nav" onClick={() => step(-1)}>
+              <Chevron dir="left" />
+            </button>
+            <button className="nav" onClick={() => step(1)}>
+              <Chevron dir="right" />
+            </button>
+            <div className="bar-title">
+              {cursor.month + 1}月{!compact && <em>{cursor.year}</em>}
+            </div>
+          </>
+        )}
+
         <div className="bar-spacer" />
-        <button
-          className={`icon-btn${settings.showCalendar ? " is-on" : ""}`}
-          onClick={() => patchSettings({ showCalendar: !settings.showCalendar })}
-        >
-          <CalIcon on={settings.showCalendar} />
-        </button>
-        <button
-          className={`icon-btn${settings.showShared ? " is-on" : ""}`}
-          onClick={() => patchSettings({ showShared: !settings.showShared })}
-        >
-          <SharedCalIcon on={settings.showShared} />
-        </button>
+
+        {/* 日历开关只在能看到日历的时候才有意义 */}
+        {showMonth && (
+          <>
+            <button
+              className={`icon-btn${settings.showCalendar ? " is-on" : ""}`}
+              onClick={() => patchSettings({ showCalendar: !settings.showCalendar })}
+            >
+              <CalIcon on={settings.showCalendar} />
+            </button>
+            <button
+              className={`icon-btn${settings.showShared ? " is-on" : ""}`}
+              onClick={() => patchSettings({ showShared: !settings.showShared })}
+            >
+              <SharedCalIcon on={settings.showShared} />
+            </button>
+          </>
+        )}
+
         <button className="icon-btn" onClick={() => setSheet(true)}>
           <GearIcon />
         </button>
       </header>
 
       <div className="body">
-        <Sidebar
-          today={today}
-          tasks={queue}
-          onToggle={toggleTask}
-          onDelete={deleteTask}
-          onRename={renameTask}
-          onMenu={(task, x, y) => setMenu({ task, x, y })}
-        />
+        {(!compact || view === "queue") && (
+          <Sidebar
+            today={today}
+            tasks={queue}
+            scroll={compact}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+            onRename={renameTask}
+            onMenu={(task, x, y) => setMenu({ task, x, y })}
+          />
+        )}
+        {showMonth && (
         <MonthGrid
           year={cursor.year}
           month={cursor.month}
@@ -335,7 +374,26 @@ export default function App() {
           onMove={moveTask}
           onMenu={(task, x, y) => setMenu({ task, x, y })}
           compact={compact}
+          selected={compact ? selected : null}
+          onSelect={setSelected}
         />
+        )}
+        {compact && view === "month" && (
+          <DayDetail
+            date={selected}
+            today={today}
+            tasks={byDate.get(selected) ?? []}
+            events={eventsByDate.get(selected) ?? []}
+            locked={locked.has(selected)}
+            priority={priority}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+            onRename={renameTask}
+            onMenu={(task, x, y) => setMenu({ task, x, y })}
+            onAdd={(title, p, date) => addTask(title, p, { date })}
+            onLock={toggleLock}
+          />
+        )}
       </div>
 
       <Dock

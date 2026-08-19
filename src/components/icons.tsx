@@ -65,6 +65,34 @@ export function GearIcon() {
   );
 }
 
+/** 队列 tab */
+export function ListIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M0.5 2.5h13M0.5 7h13M0.5 11.5h13" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+/** 月视图 tab —— 和 favicon 同一个九格图案 */
+export function GridIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <g fill="currentColor">
+        <rect x="0" y="0" width="3.6" height="3.6" />
+        <rect x="5.2" y="0" width="3.6" height="3.6" />
+        <rect x="10.4" y="0" width="3.6" height="3.6" />
+        <rect x="0" y="5.2" width="3.6" height="3.6" />
+        <rect x="5.2" y="5.2" width="3.6" height="3.6" />
+        <rect x="10.4" y="5.2" width="3.6" height="3.6" />
+        <rect x="0" y="10.4" width="3.6" height="3.6" />
+        <rect x="5.2" y="10.4" width="3.6" height="3.6" />
+        <rect x="10.4" y="10.4" width="3.6" height="3.6" />
+      </g>
+    </svg>
+  );
+}
+
 export function XIcon() {
   return (
     <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>

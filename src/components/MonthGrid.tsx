@@ -38,6 +38,8 @@ export default function MonthGrid({
   onMove,
   onMenu,
   compact,
+  selected,
+  onSelect,
 }: {
   year: number;
   month: number;
@@ -52,8 +54,10 @@ export default function MonthGrid({
   onAdd: (title: string, priority: Priority, date: ISODate) => void;
   onMove: (task: TaskDTO, date: ISODate) => void;
   onMenu: (task: TaskDTO, x: number, y: number) => void;
-  /** 窄屏：格子只剩方点，不做格内新建，长按留给页面 */
+  /** 窄屏：一天只画一个点，格内不做新建，具体内容交给下面的当日详情 */
   compact: boolean;
+  selected?: ISODate | null;
+  onSelect?: (date: ISODate) => void;
 }) {
   const [editing, setEditing] = useState<ISODate | null>(null);
   const [draft, setDraft] = useState("");
@@ -186,6 +190,7 @@ export default function MonthGrid({
             isLocked ? "is-locked" : "",
             open >= dailyLimit ? "is-full" : "",
             drag?.over === date ? "is-drop" : "",
+            selected === date ? "is-selected" : "",
           ]
             .filter(Boolean)
             .join(" ");
@@ -202,9 +207,13 @@ export default function MonthGrid({
               onPointerCancel={endCellPress}
               onClick={() => {
                 if (swallowRef.current) return;
-                // 锁定的日子不接受新任务，连输入框都不给。
-                // 窄屏也不给：50 来 px 的格子塞不下能用的输入框，走底部录入。
-                if (!isLocked && !compact) setEditing(date);
+                // 窄屏：点一天就是选中它，内容在下面的详情里看
+                if (compact) {
+                  onSelect?.(date);
+                  return;
+                }
+                // 锁定的日子不接受新任务，连输入框都不给
+                if (!isLocked) setEditing(date);
               }}
             >
               <div className="cell-head">
@@ -219,7 +228,23 @@ export default function MonthGrid({
               </div>
 
               <div className="cell-body">
-                {dayTasks.map((t) => (
+                {compact && (() => {
+                  // 一天一个点，只回答「这天有没有事」。
+                  // 颜色取当天最急的那件；全做完了就空心。
+                  if (!dayTasks.length) return null;
+                  const undone = dayTasks.filter((t) => !t.done);
+                  const top = undone.length
+                    ? Math.min(...undone.map((t) => t.priority))
+                    : 0;
+                  return (
+                    <span
+                      className={`cell-dot${undone.length ? "" : " is-done"}`}
+                      style={{ ["--pc" as string]: `var(--p${top || 3})` }}
+                    />
+                  );
+                })()}
+
+                {!compact && dayTasks.map((t) => (
                   <button
                     key={t.id}
                     className={[
@@ -250,7 +275,7 @@ export default function MonthGrid({
                   </button>
                 ))}
 
-                {editing === date && (
+                {!compact && editing === date && (
                   <input
                     className="cell-input"
                     autoFocus
@@ -272,7 +297,7 @@ export default function MonthGrid({
                   />
                 )}
 
-                {(events.get(date) ?? []).map((ev, i) => (
+                {!compact && (events.get(date) ?? []).map((ev, i) => (
                   <div
                     className={`ev${ev.shared ? " is-shared" : ""}`}
                     key={`${ev.title}-${i}`}

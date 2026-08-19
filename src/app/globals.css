@@ -231,6 +231,14 @@ button:focus {
   display: none;
 }
 
+/* 手机上队列是主视图，不裁剪，直接滚 */
+.today-list.is-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 16px;
+}
+
 /* 换一天插一条分隔线，今天那批不用 —— 上面的大日期已经说了 */
 .day-sep {
   display: flex;
@@ -825,11 +833,13 @@ button:focus {
     flex-direction: column;
   }
 
+  /* 手机上队列和月视图是两个 tab，谁显示谁占满 */
   .today {
+    flex: 1;
     width: auto;
-    max-height: 38dvh;
+    max-height: none;
     border-right: none;
-    border-bottom: 1px solid var(--line);
+    min-height: 0;
   }
 
   /* 大日期和星期挪成一行，把纵向空间还给列表 */
@@ -852,70 +862,31 @@ button:focus {
     padding: 4px 0 8px;
   }
 
-  /* 一格只有 50 来 px 宽，文字放不下也读不了 ——
-     换成方点：几个点就是几件事，颜色仍然是档位。
-     具体是什么事看上面的队列。 */
   .cell {
     padding: 3px;
+    position: relative;
   }
 
+  /* 日号居中，锁定方块脱离文档流去角落，不占位 */
+  .cell-head {
+    justify-content: center;
+  }
+
+  .cell-num {
+    margin-left: 0;
+  }
+
+  .cell-lock {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+  }
+
+  /* 点紧跟在日号下面，不是浮在格子正中 */
   .cell-body {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 3px;
-  }
-
-  .chip {
-    width: auto;
-    padding: 0;
-  }
-
-  .chip-text {
-    display: none;
-  }
-
-  .chip-bar {
-    width: 7px;
-    height: 7px;
-    min-height: 0;
-    align-self: auto;
-  }
-
-  /* 做完了 = 空心 */
-  .chip.is-done .chip-bar {
-    background: none;
-    box-shadow: inset 0 0 0 1px var(--line);
-  }
-
-  /* 截止日的粗细线在 7px 的方点上没有意义，队列里已经写着日期了 */
-  .chip.has-due,
-  .chip.is-late {
-    border-right: none;
-  }
-
-  /* 日历事件缩成一道横杠，仍然明显弱于任务的实心方点 */
-  .ev {
-    width: 7px;
-    height: 2px;
-    padding: 0;
-    border-left: none;
-    background: var(--muted);
-    opacity: 0.6;
-  }
-
-  .ev > * {
-    display: none;
-  }
-
-  /* 他人日历：横杠断开一截，和桌面上的点线一个意思 */
-  .ev.is-shared {
-    background: linear-gradient(
-      to right,
-      var(--muted) 0 3px,
-      transparent 3px 4px,
-      var(--muted) 4px 7px
-    );
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 3px;
   }
 
   .cell-num {
@@ -980,4 +951,151 @@ button:focus {
     padding-top: calc(14px + env(safe-area-inset-top));
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
+}
+
+
+/* ===========================================================
+   手机：队列 / 月视图两个 tab
+   =========================================================== */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+
+/* 选中 = 反白实心，和「今天」「选中的档位」用的是同一套说法 */
+.tab-btn {
+  width: 28px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.tab-btn.is-on {
+  background: var(--fg);
+  color: var(--inverse);
+}
+
+/* 一天一个点：这天有没有事。几件、是什么，点进去看下面 */
+.cell-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--pc);
+}
+
+.cell-dot.is-done {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* 被点中的那天：底色 + 日号描一圈。
+   外框这个说法已经被「已满」占了，不能重复用。 */
+.cell.is-selected {
+  background: var(--faint);
+}
+
+.cell.is-selected .cell-num {
+  box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+
+/* 今天本来就是反白实心，选中它时不用再加圈 */
+.cell.is-selected.is-today .cell-num {
+  box-shadow: none;
+}
+
+/* ---------- 当日详情（手机月视图的下半屏）---------- */
+
+.detail {
+  flex: none;
+  height: 42dvh;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  min-height: 0;
+}
+
+.detail.is-locked {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 7px,
+    var(--line-soft) 7px 8px
+  );
+}
+
+.detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 14px 6px;
+  flex: none;
+}
+
+.detail-date {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.detail-week {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* 锁定：空心 = 开着，实心 = 锁上。和格子左上那个小方块同一个说法 */
+.detail-lock {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  align-self: center;
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
+
+.detail-lock.is-on {
+  background: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding-bottom: 6px;
+}
+
+.detail-body .ev {
+  padding: 5px 14px 5px 14px;
+  border-left: none;
+  font-size: 12px;
+}
+
+/* 详情里的事件靠缩进和灰度弱化，左边那道线交给一个内嵌的伪元素 */
+.detail-body .ev::before {
+  content: "";
+  width: 1px;
+  align-self: stretch;
+  min-height: 12px;
+  background: var(--line);
+  margin-right: 7px;
+  flex: none;
+}
+
+.detail-body .ev.is-shared::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--line) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+.detail-add {
+  flex: none;
+  border-top: 1px solid var(--line-soft);
+  padding: 10px 14px;
+  font-size: 16px;
+}
+
+.detail-add::placeholder {
+  color: var(--line);
 }
