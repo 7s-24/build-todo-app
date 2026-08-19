@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { XIcon } from "./icons";
 import { isLate } from "./MonthGrid";
 import type { ISODate, TaskDTO } from "@/lib/types";
@@ -32,6 +32,34 @@ export default function Sidebar({
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const pressRef = useRef<{ x: number; y: number; timer: number } | null>(null);
+  // 长按弹出菜单之后，紧跟着那个 click 不能再去触发改名
+  const swallowRef = useRef(false);
+
+  const cancelPress = useCallback(() => {
+    if (pressRef.current) {
+      clearTimeout(pressRef.current.timer);
+      pressRef.current = null;
+    }
+  }, []);
+
+  // 触摸设备没有右键，长按是唯一的入口
+  function startPress(e: React.PointerEvent, task: TaskDTO) {
+    if (e.button !== 0) return;
+    const { clientX: x, clientY: y } = e;
+    const timer = window.setTimeout(() => {
+      pressRef.current = null;
+      swallowRef.current = true;
+      onMenu(task, x, y);
+    }, 500);
+    pressRef.current = { x, y, timer };
+  }
+
+  function movePress(e: React.PointerEvent) {
+    const p = pressRef.current;
+    if (!p) return;
+    if (Math.abs(e.clientX - p.x) > 8 || Math.abs(e.clientY - p.y) > 8) cancelPress();
+  }
 
   // 放不下的整行直接藏掉，不留半截被切开的文字
   useLayoutEffect(() => {
@@ -95,7 +123,18 @@ export default function Sidebar({
         style={{ ["--pc" as string]: `var(--p${t.priority})` }}
         onContextMenu={(e) => {
           e.preventDefault();
+          cancelPress();
           onMenu(t, e.clientX, e.clientY);
+        }}
+        onPointerDown={(e) => startPress(e, t)}
+        onPointerMove={movePress}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        onClickCapture={(e) => {
+          if (!swallowRef.current) return;
+          e.stopPropagation();
+          e.preventDefault();
+          swallowRef.current = false;
         }}
       >
         {/* 方框 = 完成，文字 = 编辑，两个动作不抢 */}

@@ -5,6 +5,10 @@
 
 :root,
 [data-theme="mono"] {
+  /* 让原生控件（日期选择器、滚动条、输入框）跟着主题走，
+     不声明的话 Safari / Chrome 会按系统偏好自己配色 */
+  color-scheme: light;
+
   --bg: #ffffff;
   --fg: #111111;
   --line: #dcdcdc;
@@ -24,6 +28,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --bg: #000000;
   --fg: #f0f0f0;
   --line: #2b2b2b;
@@ -35,6 +41,10 @@
   --p1: #e8524f;
   --p2: #e0a43a;
   --p3: #6f9bd8;
+}
+
+[data-theme="auto"] {
+  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -77,6 +87,9 @@ body {
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  /* Safari：去掉点击时的灰色高亮和整页橡皮筋 */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 button,
@@ -109,6 +122,8 @@ button:focus {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* iOS 上地址栏会伸缩，100vh 会被顶出屏幕，dvh 才是真实可视高度 */
+  height: 100dvh;
 }
 
 .body {
@@ -123,8 +138,8 @@ button:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 42px;
-  padding: 0 12px;
+  height: calc(42px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 12px 0;
   border-bottom: 1px solid var(--line);
   flex: none;
 }
@@ -618,8 +633,8 @@ button:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 46px;
-  padding: 0 12px;
+  min-height: 46px;
+  padding: 0 12px env(safe-area-inset-bottom);
   border-top: 1px solid var(--line);
 }
 
@@ -643,6 +658,9 @@ button:focus {
 .dock-input {
   flex: 1;
   height: 100%;
+  /* flex 子项默认 min-width:auto，不加这条输入框不肯收缩，
+     会把右边的日期挤出屏幕 */
+  min-width: 0;
 }
 
 .dock-input::placeholder {
@@ -659,6 +677,15 @@ button:focus {
 
 .dock-date.is-set {
   color: var(--fg);
+}
+
+/* 空着的时候连里面的 yyyy/mm/dd 一起压下去，那是浏览器自己画的 */
+.dock-date:not(.is-set)::-webkit-datetime-edit {
+  color: var(--line);
+}
+
+.dock-date::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
 }
 
 .dock-date:focus {
@@ -760,4 +787,197 @@ button:focus {
 
 .login-input.is-error {
   border-bottom-color: var(--p1);
+}
+
+
+/* ===========================================================
+   触摸设备：hover 不存在，藏在 hover 后面的东西必须常驻
+   =========================================================== */
+
+@media (hover: none) {
+  /* 锁定方块不常驻：42 个格子各挂一个小方块就成了噪音。
+     锁上的日子本来就有斜线底纹和实心方块，长按格子来切换。 */
+  /* 删除也不常驻：长按行会出菜单，删除在菜单里 */
+  .trow-x {
+    display: none;
+  }
+
+  .chip:hover,
+  .trow:hover,
+  .cell:hover {
+    background: none;
+  }
+
+  /* 长按任务要出自己的菜单，不能被 iOS 的选择/预览抢走 */
+  .trow,
+  .chip {
+    -webkit-touch-callout: none;
+  }
+}
+
+/* ===========================================================
+   手机：上下堆叠。队列在上、月视图在下，
+   信息结构和桌面一致，只是从并排换成上下。
+   =========================================================== */
+
+@media (max-width: 700px) {
+  .body {
+    flex-direction: column;
+  }
+
+  .today {
+    width: auto;
+    max-height: 38dvh;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* 大日期和星期挪成一行，把纵向空间还给列表 */
+  .today-head {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 10px 14px 8px;
+  }
+
+  .today-num {
+    font-size: 26px;
+  }
+
+  .today-sub {
+    margin-top: 0;
+  }
+
+  .today-list {
+    padding: 4px 0 8px;
+  }
+
+  /* 一格只有 50 来 px 宽，文字放不下也读不了 ——
+     换成方点：几个点就是几件事，颜色仍然是档位。
+     具体是什么事看上面的队列。 */
+  .cell {
+    padding: 3px;
+  }
+
+  .cell-body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 3px;
+  }
+
+  .chip {
+    width: auto;
+    padding: 0;
+  }
+
+  .chip-text {
+    display: none;
+  }
+
+  .chip-bar {
+    width: 7px;
+    height: 7px;
+    min-height: 0;
+    align-self: auto;
+  }
+
+  /* 做完了 = 空心 */
+  .chip.is-done .chip-bar {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  /* 截止日的粗细线在 7px 的方点上没有意义，队列里已经写着日期了 */
+  .chip.has-due,
+  .chip.is-late {
+    border-right: none;
+  }
+
+  /* 日历事件缩成一道横杠，仍然明显弱于任务的实心方点 */
+  .ev {
+    width: 7px;
+    height: 2px;
+    padding: 0;
+    border-left: none;
+    background: var(--muted);
+    opacity: 0.6;
+  }
+
+  .ev > * {
+    display: none;
+  }
+
+  /* 他人日历：横杠断开一截，和桌面上的点线一个意思 */
+  .ev.is-shared {
+    background: linear-gradient(
+      to right,
+      var(--muted) 0 3px,
+      transparent 3px 4px,
+      var(--muted) 4px 7px
+    );
+  }
+
+  .cell-num {
+    font-size: 11px;
+    min-width: 15px;
+    height: 15px;
+  }
+
+  .cell-head {
+    height: 15px;
+  }
+
+  .week-head span {
+    padding: 4px 4px;
+    font-size: 10px;
+  }
+
+  /* iOS 在输入框字号小于 16px 时会自动放大整页，进去就出不来 */
+  .dock-input,
+  .dock-date,
+  .trow-input,
+  .cell-input,
+  .menu-date,
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 16px;
+  }
+
+  .dock {
+    gap: 8px;
+  }
+
+  .dock-date {
+    max-width: 130px;
+  }
+
+  /* 手指比鼠标粗，行高和方框都放大一点 */
+  .trow {
+    padding: 8px 14px;
+  }
+
+  .tbox {
+    width: 14px;
+    height: 14px;
+    margin-top: 2px;
+  }
+
+  .swatch {
+    width: 18px;
+    height: 18px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* 设置面板在窄屏上铺满 */
+  .sheet {
+    width: 100%;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  }
 }

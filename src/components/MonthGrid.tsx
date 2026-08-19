@@ -37,6 +37,7 @@ export default function MonthGrid({
   onAdd,
   onMove,
   onMenu,
+  compact,
 }: {
   year: number;
   month: number;
@@ -51,6 +52,8 @@ export default function MonthGrid({
   onAdd: (title: string, priority: Priority, date: ISODate) => void;
   onMove: (task: TaskDTO, date: ISODate) => void;
   onMenu: (task: TaskDTO, x: number, y: number) => void;
+  /** 窄屏：格子只剩方点，不做格内新建，长按留给页面 */
+  compact: boolean;
 }) {
   const [editing, setEditing] = useState<ISODate | null>(null);
   const [draft, setDraft] = useState("");
@@ -58,6 +61,7 @@ export default function MonthGrid({
 
   const dragRef = useRef<Drag | null>(null);
   const pressRef = useRef<{ task: TaskDTO; x: number; y: number; timer: number } | null>(null);
+  const cellPressRef = useRef<{ x: number; y: number; timer: number } | null>(null);
   // 拖完之后紧跟着的那个 click 要吞掉，否则会顺手切换完成 / 打开新建输入框
   const swallowRef = useRef(false);
 
@@ -116,13 +120,42 @@ export default function MonthGrid({
   }, [cancelPress, onMove, setDrag]);
 
   function startPress(e: React.PointerEvent, task: TaskDTO) {
-    if (e.button !== 0) return;
+    if (compact || e.button !== 0) return;
     const { clientX: x, clientY: y } = e;
     const timer = window.setTimeout(() => {
       pressRef.current = null;
       setDrag({ task, x, y, over: null });
     }, HOLD_MS);
     pressRef.current = { task, x, y, timer };
+  }
+
+  /**
+   * 窄屏下长按格子 = 锁定 / 解锁。
+   * 桌面用的是格子左上角那个小方块，但在手机上让它常驻会变成 42 个噪点，
+   * 而窄屏里 chip 不可拖动，长按正好空着。
+   */
+  function startCellPress(e: React.PointerEvent, date: ISODate, locked: boolean) {
+    if (!compact || e.button !== 0) return;
+    if (e.target instanceof Element && e.target.closest(".chip")) return;
+    const { clientX: x, clientY: y } = e;
+    const timer = window.setTimeout(() => {
+      cellPressRef.current = null;
+      onLock(date, !locked);
+    }, 500);
+    cellPressRef.current = { x, y, timer };
+  }
+
+  function moveCellPress(e: React.PointerEvent) {
+    const p = cellPressRef.current;
+    if (!p) return;
+    if (Math.abs(e.clientX - p.x) > 8 || Math.abs(e.clientY - p.y) > 8) endCellPress();
+  }
+
+  function endCellPress() {
+    if (cellPressRef.current) {
+      clearTimeout(cellPressRef.current.timer);
+      cellPressRef.current = null;
+    }
   }
 
   function commit(date: ISODate) {
@@ -163,10 +196,15 @@ export default function MonthGrid({
               className={cls}
               data-date={date}
               data-locked={isLocked ? "1" : undefined}
+              onPointerDown={(e) => startCellPress(e, date, isLocked)}
+              onPointerMove={moveCellPress}
+              onPointerUp={endCellPress}
+              onPointerCancel={endCellPress}
               onClick={() => {
                 if (swallowRef.current) return;
-                // 锁定的日子不接受新任务，连输入框都不给
-                if (!isLocked) setEditing(date);
+                // 锁定的日子不接受新任务，连输入框都不给。
+                // 窄屏也不给：50 来 px 的格子塞不下能用的输入框，走底部录入。
+                if (!isLocked && !compact) setEditing(date);
               }}
             >
               <div className="cell-head">

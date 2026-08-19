@@ -8,6 +8,7 @@ import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
 import { CalIcon, Chevron, GearIcon, SharedCalIcon } from "./icons";
 import { monthGrid, shift, todayLocal } from "@/lib/date";
+import { useCompact } from "@/lib/useCompact";
 import type {
   CalEvent,
   CalendarResult,
@@ -65,6 +66,7 @@ export default function App() {
   });
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
+  const compact = useCompact();
   const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
 
   // 窗口 = 当前月视图 ∪ [今天, 今天+180天]。
@@ -332,6 +334,7 @@ export default function App() {
           onAdd={(title, p, date) => addTask(title, p, { date })}
           onMove={moveTask}
           onMenu={(task, x, y) => setMenu({ task, x, y })}
+          compact={compact}
         />
       </div>
 
