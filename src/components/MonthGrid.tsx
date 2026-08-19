@@ -1,10 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { monthGrid } from "@/lib/date";
 import type { CalEvent, ISODate, Priority, TaskDTO } from "@/lib/types";
 
 const WEEK = ["一", "二", "三", "四", "五", "六", "日"];
+/** 按住多久算「长按」而不是点击 */
+const HOLD_MS = 220;
+/** 长按成立前挪动超过这么多像素，就当成误触，不进入拖动 */
+const SLOP = 6;
+
+interface Drag {
+  task: TaskDTO;
+  x: number;
+  y: number;
+  over: ISODate | null;
+}
+
+/** 计划日期越过了截止日，或者截止日已经过去 —— 两种都算「晚了」 */
+export function isLate(task: TaskDTO, today: ISODate): boolean {
+  if (task.done || !task.due) return false;
+  return task.date > task.due || today > task.due;
+}
 
 export default function MonthGrid({
   year,
@@ -18,6 +35,8 @@ export default function MonthGrid({
   onToggle,
   onLock,
   onAdd,
+  onMove,
+  onMenu,
 }: {
   year: number;
   month: number;
@@ -30,10 +49,81 @@ export default function MonthGrid({
   onToggle: (task: TaskDTO) => void;
   onLock: (date: ISODate, locked: boolean) => void;
   onAdd: (title: string, priority: Priority, date: ISODate) => void;
+  onMove: (task: TaskDTO, date: ISODate) => void;
+  onMenu: (task: TaskDTO, x: number, y: number) => void;
 }) {
   const [editing, setEditing] = useState<ISODate | null>(null);
   const [draft, setDraft] = useState("");
-  const cells = monthGrid(year, month);
+  const [drag, setDragState] = useState<Drag | null>(null);
+
+  const dragRef = useRef<Drag | null>(null);
+  const pressRef = useRef<{ task: TaskDTO; x: number; y: number; timer: number } | null>(null);
+  // 拖完之后紧跟着的那个 click 要吞掉，否则会顺手切换完成 / 打开新建输入框
+  const swallowRef = useRef(false);
+
+  const setDrag = useCallback((d: Drag | null) => {
+    dragRef.current = d;
+    setDragState(d);
+  }, []);
+
+  const cancelPress = useCallback(() => {
+    if (pressRef.current) {
+      clearTimeout(pressRef.current.timer);
+      pressRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    function dropTarget(e: PointerEvent): ISODate | null {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el instanceof Element ? el.closest<HTMLElement>("[data-date]") : null;
+      // 锁定的日子不接受落点，和「点空白格不给输入框」保持一致
+      if (!cell || cell.dataset.locked === "1") return null;
+      return cell.dataset.date ?? null;
+    }
+
+    function onMove_(e: PointerEvent) {
+      const p = pressRef.current;
+      if (p) {
+        if (Math.abs(e.clientX - p.x) > SLOP || Math.abs(e.clientY - p.y) > SLOP) {
+          cancelPress();
+        }
+        return;
+      }
+      const d = dragRef.current;
+      if (!d) return;
+      setDrag({ ...d, x: e.clientX, y: e.clientY, over: dropTarget(e) });
+    }
+
+    function onUp() {
+      cancelPress();
+      const d = dragRef.current;
+      if (!d) return;
+      setDrag(null);
+      swallowRef.current = true;
+      setTimeout(() => (swallowRef.current = false), 0);
+      if (d.over && d.over !== d.task.date) onMove(d.task, d.over);
+    }
+
+    window.addEventListener("pointermove", onMove_);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove_);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [cancelPress, onMove, setDrag]);
+
+  function startPress(e: React.PointerEvent, task: TaskDTO) {
+    if (e.button !== 0) return;
+    const { clientX: x, clientY: y } = e;
+    const timer = window.setTimeout(() => {
+      pressRef.current = null;
+      setDrag({ task, x, y, over: null });
+    }, HOLD_MS);
+    pressRef.current = { task, x, y, timer };
+  }
 
   function commit(date: ISODate) {
     const title = draft.trim();
@@ -42,6 +132,8 @@ export default function MonthGrid({
     setEditing(null);
   }
 
+  const cells = monthGrid(year, month);
+
   return (
     <div className="month">
       <div className="week-head">
@@ -49,7 +141,7 @@ export default function MonthGrid({
           <span key={w}>{w}</span>
         ))}
       </div>
-      <div className="grid">
+      <div className={`grid${drag ? " is-dragging" : ""}`}>
         {cells.map((date) => {
           const dayTasks = tasks.get(date) ?? [];
           const isLocked = locked.has(date);
@@ -60,6 +152,7 @@ export default function MonthGrid({
             date === today ? "is-today" : "",
             isLocked ? "is-locked" : "",
             open >= dailyLimit ? "is-full" : "",
+            drag?.over === date ? "is-drop" : "",
           ]
             .filter(Boolean)
             .join(" ");
@@ -68,7 +161,10 @@ export default function MonthGrid({
             <div
               key={date}
               className={cls}
+              data-date={date}
+              data-locked={isLocked ? "1" : undefined}
               onClick={() => {
+                if (swallowRef.current) return;
                 // 锁定的日子不接受新任务，连输入框都不给
                 if (!isLocked) setEditing(date);
               }}
@@ -88,10 +184,26 @@ export default function MonthGrid({
                 {dayTasks.map((t) => (
                   <button
                     key={t.id}
-                    className={`chip${t.done ? " is-done" : ""}`}
+                    className={[
+                      "chip",
+                      t.done ? "is-done" : "",
+                      t.due ? "has-due" : "",
+                      isLate(t, today) ? "is-late" : "",
+                      drag?.task.id === t.id ? "is-held" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     style={{ ["--pc" as string]: `var(--p${t.priority})` }}
+                    onPointerDown={(e) => startPress(e, t)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      cancelPress();
+                      onMenu(t, e.clientX, e.clientY);
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (swallowRef.current) return;
                       onToggle(t);
                     }}
                   >
@@ -133,6 +245,20 @@ export default function MonthGrid({
           );
         })}
       </div>
+
+      {drag && (
+        <div
+          className="ghost"
+          style={{
+            left: drag.x,
+            top: drag.y,
+            ["--pc" as string]: `var(--p${drag.task.priority})`,
+          }}
+        >
+          <span className="chip-bar" />
+          <span className="chip-text">{drag.task.title}</span>
+        </div>
+      )}
     </div>
   );
 }

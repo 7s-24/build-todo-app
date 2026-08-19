@@ -401,6 +401,12 @@ button:focus {
   background: var(--faint);
 }
 
+/* 长按要能拖，触摸设备上得先把默认的滚动手势让出来 */
+.chip {
+  touch-action: none;
+  user-select: none;
+}
+
 .chip-bar {
   width: 3px;
   align-self: stretch;
@@ -455,6 +461,101 @@ button:focus {
   padding: 1px 0 1px 4px;
   border-left: 3px solid var(--pc, var(--fg));
   background: var(--faint);
+}
+
+/* ---------- 截止日 ---------- */
+
+/* 有最晚完成日期 —— 右侧一道细线，像给这行画个终点 */
+.chip.has-due,
+.trow.has-due {
+  border-right: 1px solid var(--line);
+}
+
+/* 晚了（计划日越过截止日，或截止日已过） —— 终点线加粗并染上该任务的档位色 */
+.chip.is-late,
+.trow.is-late {
+  border-right: 2px solid var(--pc);
+}
+
+/* ---------- 长按拖动 ---------- */
+
+.grid.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* 拖起来之后原位留个淡影，知道它从哪来 */
+.chip.is-held {
+  opacity: 0.25;
+}
+
+/* 可落点 —— 虚线框，跟「满额」的实线加重区分开 */
+.cell.is-drop {
+  outline: 1.5px dashed var(--fg);
+  outline-offset: -2px;
+}
+
+.ghost {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  max-width: 180px;
+  padding: 2px 6px 2px 0;
+  font-size: 11.5px;
+  background: var(--bg);
+  border: 1px solid var(--fg);
+  pointer-events: none;
+  transform: translate(8px, 8px);
+}
+
+.ghost .chip-bar {
+  min-height: 14px;
+}
+
+/* ---------- 任务右键面板 ---------- */
+
+.menu {
+  position: fixed;
+  z-index: 40;
+  background: var(--bg);
+  border: 1px solid var(--fg);
+  padding: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.menu-gap {
+  width: 28px;
+}
+
+.menu-x {
+  color: var(--muted);
+  margin-left: auto;
+}
+
+.menu-x:hover {
+  color: var(--fg);
+}
+
+.menu-date {
+  font-size: 11px;
+  border-bottom: 1px solid var(--line);
+  padding: 2px 0;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-date:focus {
+  border-bottom-color: var(--fg);
 }
 
 /* ---------- 底部输入 ---------- */

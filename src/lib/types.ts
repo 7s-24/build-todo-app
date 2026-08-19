@@ -7,6 +7,7 @@ export interface TaskDTO {
   id: number;
   title: string;
   date: ISODate;
+  due: ISODate | null;
   priority: Priority;
   done: boolean;
   position: number;

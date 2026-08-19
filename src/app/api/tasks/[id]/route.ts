@@ -26,6 +26,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
       patch.date = body.date;
     }
     if ([1, 2, 3].includes(body.priority)) patch.priority = body.priority;
+    // due 允许显式清空，所以 null 也是合法输入
+    if (body.due === null) patch.dueDate = null;
+    else if (typeof body.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.due)) {
+      patch.dueDate = body.due;
+    }
     if (!Object.keys(patch).length) return bad("没有可更新的字段");
 
     const [row] = await getDb()

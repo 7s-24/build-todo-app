@@ -8,6 +8,7 @@ export function toDTO(row: typeof tasks.$inferSelect): TaskDTO {
     id: row.id,
     title: row.title,
     date: row.date,
+    due: row.dueDate,
     priority: (row.priority as Priority) ?? 2,
     done: row.done,
     position: row.position,

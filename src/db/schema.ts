@@ -13,6 +13,8 @@ export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   date: date("date").notNull(),
+  /** 最晚完成日期。只作记录与提醒，不参与自动排期 */
+  dueDate: date("due_date"),
   priority: integer("priority").notNull().default(2),
   done: boolean("done").notNull().default(false),
   doneAt: timestamp("done_at", { withTimezone: true }),

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Dock from "./Dock";
 import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
+import TaskMenu from "./TaskMenu";
 import TodayPane from "./TodayPane";
 import { CalIcon, Chevron, GearIcon } from "./icons";
 import { monthGrid, todayLocal } from "@/lib/date";
@@ -58,6 +59,7 @@ export default function App() {
   const [feeds, setFeeds] = useState({ ok: 0, total: 0 });
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
+  const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
 
   // 视图窗口要把「今天」也包进去，否则翻到别的月份时今日栏会空
   const range = useMemo(() => {
@@ -139,22 +141,36 @@ export default function App() {
     [today, range],
   );
 
-  const toggleTask = useCallback(async (task: TaskDTO) => {
-    const done = !task.done;
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, done } : t)),
-    );
-    const res = await fetch(`/api/tasks/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done }),
-    });
-    if (!res.ok) {
+  /** 乐观更新 + 失败回滚，改完成 / 优先级 / 日期 / 截止日都走这条 */
+  const patchTask = useCallback(
+    async (task: TaskDTO, patch: Partial<TaskDTO>) => {
       setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, done: !done } : t)),
+        prev.map((t) => (t.id === task.id ? { ...t, ...patch } : t)),
       );
-    }
-  }, []);
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
+        return;
+      }
+      const saved: TaskDTO = await res.json();
+      setTasks((prev) => prev.map((t) => (t.id === saved.id ? saved : t)));
+    },
+    [],
+  );
+
+  const toggleTask = useCallback(
+    (task: TaskDTO) => patchTask(task, { done: !task.done }),
+    [patchTask],
+  );
+
+  const moveTask = useCallback(
+    (task: TaskDTO, date: ISODate) => patchTask(task, { date }),
+    [patchTask],
+  );
 
   const deleteTask = useCallback(async (task: TaskDTO) => {
     setTasks((prev) => prev.filter((t) => t.id !== task.id));
@@ -184,6 +200,8 @@ export default function App() {
     });
     if (res.ok) setSettings(await res.json());
   }, []);
+
+  const menuTask = menu ? (tasks.find((t) => t.id === menu.task.id) ?? null) : null;
 
   const byDate = useMemo(() => groupBy(tasks), [tasks]);
   const eventsByDate = useMemo(() => groupEvents(events), [events]);
@@ -235,6 +253,7 @@ export default function App() {
           tasks={todayTasks}
           onToggle={toggleTask}
           onDelete={deleteTask}
+          onMenu={(task, x, y) => setMenu({ task, x, y })}
         />
         <MonthGrid
           year={cursor.year}
@@ -248,6 +267,8 @@ export default function App() {
           onToggle={toggleTask}
           onLock={toggleLock}
           onAdd={addTask}
+          onMove={moveTask}
+          onMenu={(task, x, y) => setMenu({ task, x, y })}
         />
       </div>
 
@@ -256,6 +277,20 @@ export default function App() {
         onPriority={setPriority}
         onAdd={(title, p) => addTask(title, p)}
       />
+
+      {menu && menuTask && (
+        <TaskMenu
+          task={menuTask}
+          x={menu.x}
+          y={menu.y}
+          onPatch={(patch) => patchTask(menuTask, patch)}
+          onDelete={() => {
+            deleteTask(menuTask);
+            setMenu(null);
+          }}
+          onClose={() => setMenu(null)}
+        />
+      )}
 
       {sheet && (
         <Sheet
