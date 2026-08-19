@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Dock from "./Dock";
 import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
+import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
-import TodayPane from "./TodayPane";
 import { CalIcon, Chevron, GearIcon } from "./icons";
-import { monthGrid, todayLocal } from "@/lib/date";
+import { monthGrid, shift, todayLocal } from "@/lib/date";
 import type {
   CalEvent,
   CalendarResult,
@@ -61,11 +61,14 @@ export default function App() {
   const [sheet, setSheet] = useState(false);
   const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
 
-  // 视图窗口要把「今天」也包进去，否则翻到别的月份时今日栏会空
+  // 窗口 = 当前月视图 ∪ [今天, 今天+180天]。
+  // 后半段是给左侧队列用的：它显示的是「我还欠着什么」，
+  // 不该因为你翻到别的月份就变了内容。
   const range = useMemo(() => {
     const cells = monthGrid(cursor.year, cursor.month);
+    const ahead = shift(today, 180);
     const start = cells[0] < today ? cells[0] : today;
-    const end = cells[41] > today ? cells[41] : today;
+    const end = cells[41] > ahead ? cells[41] : ahead;
     return { start, end };
   }, [cursor, today]);
 
@@ -233,12 +236,18 @@ export default function App() {
 
   const byDate = useMemo(() => groupBy(tasks), [tasks]);
   const eventsByDate = useMemo(() => groupEvents(events), [events]);
-  const todayTasks = useMemo(
+  // 队列只放未完成的 —— 它回答的是「还剩多少」，勾掉的不该继续占位置
+  const queue = useMemo(
     () =>
-      (byDate.get(today) ?? [])
-        .slice()
-        .sort((a, b) => Number(a.done) - Number(b.done) || a.priority - b.priority),
-    [byDate, today],
+      tasks
+        .filter((t) => !t.done)
+        .sort(
+          (a, b) =>
+            a.date.localeCompare(b.date) ||
+            a.priority - b.priority ||
+            a.id - b.id,
+        ),
+    [tasks],
   );
 
   function step(delta: number) {
@@ -276,9 +285,9 @@ export default function App() {
       </header>
 
       <div className="body">
-        <TodayPane
+        <Sidebar
           today={today}
-          tasks={todayTasks}
+          tasks={queue}
           onToggle={toggleTask}
           onDelete={deleteTask}
           onRename={renameTask}

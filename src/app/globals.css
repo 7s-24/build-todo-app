@@ -204,10 +204,34 @@ button:focus {
   font-size: 12px;
 }
 
+/* 不滚动：视窗放得下几条就是几条，放不下的整行藏掉 */
 .today-list {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 6px 0 12px;
+  min-height: 0;
+}
+
+.today-list > .is-clipped {
+  display: none;
+}
+
+/* 换一天插一条分隔线，今天那批不用 —— 上面的大日期已经说了 */
+.day-sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 3px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.day-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
 }
 
 .today-empty {
