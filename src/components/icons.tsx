@@ -93,6 +93,16 @@ export function GridIcon() {
   );
 }
 
+/** 项目面板 tab */
+export function FlagIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M2.2 0.6v12.8" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2.2 1.4h9.6v5.4H2.2z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function XIcon() {
   return (
     <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>

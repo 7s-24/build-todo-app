@@ -7,11 +7,14 @@ import Sheet from "./Sheet";
 import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
 import DayDetail from "./DayDetail";
-import { CalIcon, Chevron, GearIcon, GridIcon, ListIcon, SharedCalIcon } from "./icons";
+import Projects from "./Projects";
+import { CalIcon, Chevron, FlagIcon, GearIcon, GridIcon, ListIcon, SharedCalIcon } from "./icons";
 import { monthGrid, shift, todayLocal } from "@/lib/date";
 import { useCompact } from "@/lib/useCompact";
 import type {
   CalEvent,
+  ProjectDTO,
+  ProjectKind,
   CalendarResult,
   FeedStatus,
   ISODate,
@@ -69,8 +72,9 @@ export default function App() {
   const [sheet, setSheet] = useState(false);
   const compact = useCompact();
   // 手机上队列和月视图分成两个 tab，队列是默认那个
-  const [view, setView] = useState<"queue" | "month">("queue");
+  const [view, setView] = useState<"queue" | "month" | "projects">("queue");
   const [selected, setSelected] = useState<ISODate>(() => todayLocal());
+  const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
 
   // 窗口 = 当前月视图 ∪ [今天, 今天+180天]。
@@ -114,6 +118,18 @@ export default function App() {
       alive = false;
     };
   }, [load, today]);
+
+  // 项目面板和日期无关，挂载时拉一次就够
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/projects")
+      .then((r) => (r.ok ? r.json() : { projects: [] }))
+      .then((d) => alive && setProjects(d.projects ?? []))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 两组日历一次拉完、都带标记，显示与否在渲染时过滤 ——
   // 开关因此是即时的，不用等网络
@@ -239,6 +255,39 @@ export default function App() {
     });
   }, []);
 
+  const addProject = useCallback(async (title: string, kind: ProjectKind) => {
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, kind }),
+    });
+    if (!res.ok) return;
+    const created: ProjectDTO = await res.json();
+    setProjects((prev) => [...prev, created]);
+  }, []);
+
+  const patchProject = useCallback(
+    async (project: ProjectDTO, patch: Partial<ProjectDTO>) => {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === project.id ? { ...p, ...patch } : p)),
+      );
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        setProjects((prev) => prev.map((p) => (p.id === project.id ? project : p)));
+      }
+    },
+    [],
+  );
+
+  const deleteProject = useCallback(async (project: ProjectDTO) => {
+    setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
+  }, []);
+
   const patchSettings = useCallback(async (patch: Partial<SettingsDTO>) => {
     setSettings((prev) => ({ ...prev, ...patch }));
     const res = await fetch("/api/settings", {
@@ -303,6 +352,12 @@ export default function App() {
               onClick={() => setView("month")}
             >
               <GridIcon />
+            </button>
+            <button
+              className={`tab-btn${view === "projects" ? " is-on" : ""}`}
+              onClick={() => setView("projects")}
+            >
+              <FlagIcon />
             </button>
           </div>
         )}
@@ -377,6 +432,15 @@ export default function App() {
           selected={compact ? selected : null}
           onSelect={setSelected}
         />
+        )}
+        {(!compact || view === "projects") && (
+          <Projects
+            projects={projects}
+            onAdd={addProject}
+            onRename={(p, title) => patchProject(p, { title })}
+            onMove={(p, kind) => patchProject(p, { kind })}
+            onDelete={deleteProject}
+          />
         )}
         {compact && view === "month" && (
           <DayDetail

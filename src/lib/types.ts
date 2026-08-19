@@ -13,6 +13,15 @@ export interface TaskDTO {
   position: number;
 }
 
+export type ProjectKind = "funded" | "personal" | "idea";
+
+export interface ProjectDTO {
+  id: number;
+  title: string;
+  kind: ProjectKind;
+  position: number;
+}
+
 export interface SettingsDTO {
   dailyLimit: number;
   icsUrls: string | null; // 自己的，一行一个

@@ -43,6 +43,22 @@ export const settings = pgTable("settings", {
   theme: text("theme").notNull().default("mono"),
 });
 
+/**
+ * 常驻的科研项目面板。和 tasks 是两回事：
+ * 这里只标注「现在在做什么」，不排期、不排序到某一天、没有完成态。
+ */
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  /** funded | personal | idea */
+  kind: text("kind").notNull().default("idea"),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type Task = typeof tasks.$inferSelect;
 export type Day = typeof days.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
+export type Project = typeof projects.$inferSelect;

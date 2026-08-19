@@ -1,7 +1,22 @@
 import { and, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { days, settings, tasks } from "@/db/schema";
-import type { Priority, SettingsDTO, TaskDTO } from "./types";
+import { days, projects, settings, tasks } from "@/db/schema";
+import type { Priority, ProjectDTO, ProjectKind, SettingsDTO, TaskDTO } from "./types";
+
+const KINDS: ProjectKind[] = ["funded", "personal", "idea"];
+
+export function isKind(v: unknown): v is ProjectKind {
+  return typeof v === "string" && KINDS.includes(v as ProjectKind);
+}
+
+export function projectDTO(row: typeof projects.$inferSelect): ProjectDTO {
+  return {
+    id: row.id,
+    title: row.title,
+    kind: isKind(row.kind) ? row.kind : "idea",
+    position: row.position,
+  };
+}
 
 export function toDTO(row: typeof tasks.$inferSelect): TaskDTO {
   return {

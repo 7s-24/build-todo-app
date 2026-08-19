@@ -1099,3 +1099,138 @@ button:focus {
 .detail-add::placeholder {
   color: var(--line);
 }
+
+
+/* ===========================================================
+   右侧科研项目面板
+   =========================================================== */
+
+.projects {
+  width: 208px;
+  flex: none;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.pgroup {
+  padding: 10px 0 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.pgroup:last-child {
+  border-bottom: none;
+}
+
+.pgroup-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pgroup-add {
+  margin-left: auto;
+  color: var(--line);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.pgroup:hover .pgroup-add {
+  color: var(--muted);
+}
+
+.pgroup-add:hover {
+  color: var(--fg);
+}
+
+.prow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px 12px;
+  position: relative;
+}
+
+.prow:hover {
+  background: var(--faint);
+}
+
+.prow-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  cursor: text;
+  font-size: 12px;
+}
+
+.prow-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--fg);
+}
+
+.prow-input.is-new {
+  margin: 2px 12px 0;
+}
+
+/* 换组的下拉框铺在整行上，透明 —— 点行的右侧空白就能换，不加图标 */
+.prow-kind {
+  position: absolute;
+  inset: 0;
+  left: auto;
+  width: 26px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.prow-x {
+  color: var(--muted);
+  opacity: 0;
+  flex: none;
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.prow:hover .prow-x {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .prow-x {
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 700px) {
+  .projects {
+    width: auto;
+    flex: 1;
+    border-left: none;
+  }
+
+  .prow {
+    padding: 8px 14px;
+  }
+
+  .prow-text,
+  .prow-input {
+    font-size: 15px;
+  }
+
+  .prow-input.is-new {
+    font-size: 16px;
+  }
+
+  .prow-kind {
+    width: 34px;
+  }
+}
