@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# todo
 
-## Getting Started
+单人用的每日 to-do。月视图为主，底部快速录入按紧急程度自动排期，Apple 日历只读订阅作参考。
 
-First, run the development server:
+需求原文见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) —— 有分歧时以那份文档的第一部分为准。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 技术栈
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 16（App Router）+ TypeScript
+- Neon Serverless Postgres + Drizzle ORM
+- 手写 CSS，无 UI 库；全部颜色走 CSS 变量，换肤只改 `src/app/globals.css` 顶部的令牌块
+- 部署：Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 本地起步
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `cp .env.example .env.local`，填入 Neon 连接串（Neon 控制台 → Connection string）。
+2. `npx drizzle-kit push` 建表。
+3. `npm run dev`。
 
-## Learn More
+`APP_PASSWORD` 留空时不开鉴权，适合本地；部署到 Vercel 时务必设上。
 
-To learn more about Next.js, take a look at the following resources:
+## 交互约定
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 操作 | 结果 |
+|---|---|
+| 点月视图格子空白处 | 就地新建当天任务 |
+| 点格子里的任务 | 切换完成 |
+| 点格子左上小方块 | 锁定 / 解锁该日 |
+| 底部输入框回车 | 按左侧选中的紧急档自动排期 |
+| 顶栏日历图标 | 显示 / 隐藏 Apple 日历事件 |
+| 按 `t` | 跳回今天所在月份 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+状态一律靠样式表达：完成 = 删除线 + 淡化，锁定 = 斜线底纹，满额 = 边框加重，今天 = 反白方块。界面上不写这些状态的名字。
 
-## Deploy on Vercel
+## 自动排期规则
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+按底部选中的档位决定落点，规则刻意保持可预测：
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **第一档**：落今天，无视每日上限；今天若被锁定则顺延到最近的未锁定日。
+- **第二档**：从今天起，第一个「未锁定且未满」的日子。
+- **第三档**：从明天起，第一个「未锁定且未满」的日子，不占今天的名额。
+
+上限只统计**未完成**的任务。
+
+## Apple 日历
+
+Mac 日历 → 右键目标日历 → 共享设置 → 勾选「公开日历」→ 复制链接，填进设置面板。只读订阅，服务端缓存 15 分钟，本 app 不会写回你的日历。

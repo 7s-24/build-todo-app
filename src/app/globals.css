@@ -1,26 +1,572 @@
-@import "tailwindcss";
+/* ===========================================================
+   设计令牌 —— 皮肤扩展的唯一入口
+   换肤 = 复制一个 [data-theme] 块并改这些值，组件一行都不用动。
+   =========================================================== */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root,
+[data-theme="mono"] {
+  --bg: #ffffff;
+  --fg: #111111;
+  --line: #dcdcdc;
+  --line-soft: #ececec;
+  --muted: #8c8c8c;
+  --faint: #f6f6f6;
+  --inverse: #ffffff;
+
+  /* 全局唯一的色相来源：紧急程度三档 */
+  --p1: #cf2222;
+  --p2: #d38a12;
+  --p3: #4a6ea8;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
+    "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --cell-pad: 5px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  --bg: #000000;
+  --fg: #f0f0f0;
+  --line: #2b2b2b;
+  --line-soft: #1c1c1c;
+  --muted: #7a7a7a;
+  --faint: #0e0e0e;
+  --inverse: #000000;
+
+  --p1: #e8524f;
+  --p2: #e0a43a;
+  --p3: #6f9bd8;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  [data-theme="auto"] {
+    --bg: #000000;
+    --fg: #f0f0f0;
+    --line: #2b2b2b;
+    --line-soft: #1c1c1c;
+    --muted: #7a7a7a;
+    --faint: #0e0e0e;
+    --inverse: #000000;
+    --p1: #e8524f;
+    --p2: #e0a43a;
+    --p3: #6f9bd8;
   }
 }
 
+/* ===========================================================
+   基础
+   =========================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-radius: 0; /* 无圆角是硬规则，不留例外 */
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  appearance: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+input:focus,
+select:focus,
+button:focus {
+  outline: none;
+}
+
+/* ===========================================================
+   骨架
+   =========================================================== */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ---------- 顶栏 ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.bar-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  min-width: 150px;
+}
+
+.bar-title em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.bar-spacer {
+  flex: 1;
+}
+
+.nav {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.nav:hover {
+  color: var(--fg);
+}
+
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.icon-btn:hover {
+  color: var(--fg);
+}
+
+.icon-btn.is-on {
+  color: var(--fg);
+}
+
+/* ---------- 今日栏 ---------- */
+
+.today {
+  width: 232px;
+  flex: none;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.today-head {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.today-num {
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+.today-sub {
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.today-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 12px;
+}
+
+.today-empty {
+  height: 1px;
+  background: var(--line-soft);
+  margin: 14px 14px 0;
+}
+
+/* 今日行：方块 = 完成状态，填充即已完成，不写字 */
+.trow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 14px;
+}
+
+.trow:hover {
+  background: var(--faint);
+}
+
+.tbox {
+  width: 11px;
+  height: 11px;
+  margin-top: 3px;
+  flex: none;
+  box-shadow: inset 0 0 0 1px var(--pc, var(--muted));
+}
+
+.trow.is-done .tbox {
+  background: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--muted);
+}
+
+.trow-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.trow.is-done .trow-text {
+  text-decoration: line-through;
+  opacity: 0.35;
+}
+
+.trow-x {
+  color: var(--muted);
+  opacity: 0;
+  flex: none;
+  padding: 0 2px;
+}
+
+.trow:hover .trow-x {
+  opacity: 1;
+}
+
+/* ---------- 月视图 ---------- */
+
+.month {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.week-head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+.week-head span {
+  padding: 5px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  min-height: 0;
+}
+
+.cell {
+  background: var(--bg);
+  padding: var(--cell-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  cursor: default;
+}
+
+/* 非本月：只淡化内容，不能淡化格子底色，否则会透出网格线的灰 */
+.cell.is-out .cell-head,
+.cell.is-out .cell-body {
+  opacity: 0.34;
+}
+
+/* 满额 —— 边框加重，不出现任何文案 */
+.cell.is-full {
+  box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+
+/* 锁定 —— 斜线底纹 */
+.cell.is-locked {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 5px,
+    var(--line-soft) 5px 6px
+  );
+}
+
+.cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  height: 17px;
+}
+
+.cell-lock {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  box-shadow: inset 0 0 0 1px var(--muted);
+  opacity: 0;
+}
+
+.cell:hover .cell-lock {
+  opacity: 1;
+}
+
+.cell.is-locked .cell-lock {
+  opacity: 1;
+  background: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+.cell-num {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+}
+
+/* 今天 —— 反白实心方块 */
+.cell.is-today .cell-num {
+  background: var(--fg);
+  color: var(--inverse);
+  font-weight: 600;
+}
+
+.cell-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  scrollbar-width: none;
+}
+
+.cell-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 格内任务：左侧色条 = 紧急程度 */
+.chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 11.5px;
+  line-height: 1.25;
+  padding: 1px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.chip:hover {
+  background: var(--faint);
+}
+
+.chip-bar {
+  width: 3px;
+  align-self: stretch;
+  min-height: 12px;
+  flex: none;
+  background: var(--pc);
+}
+
+.chip-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip.is-done .chip-bar {
+  background: var(--line);
+}
+
+.chip.is-done .chip-text {
+  text-decoration: line-through;
+  opacity: 0.35;
+}
+
+/* Apple 日历事件 —— 细、淡、无色，永远弱于 to-do */
+.ev {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted);
+  opacity: 0.75;
+  padding: 1px 0 1px 3px;
+  border-left: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-time {
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  opacity: 0.7;
+}
+
+/* 格内直接新建 */
+.cell-input {
+  width: 100%;
+  font-size: 11.5px;
+  padding: 1px 0 1px 4px;
+  border-left: 3px solid var(--pc, var(--fg));
+  background: var(--faint);
+}
+
+/* ---------- 底部输入 ---------- */
+
+.dock {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 12px;
+  border-top: 1px solid var(--line);
+}
+
+.picker {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+/* 三档色块：选中 = 实心，未选 = 空心。不写“高中低” */
+.swatch {
+  width: 15px;
+  height: 15px;
+  box-shadow: inset 0 0 0 1.5px var(--pc);
+}
+
+.swatch.is-on {
+  background: var(--pc);
+}
+
+.dock-input {
+  flex: 1;
+  height: 100%;
+}
+
+.dock-input::placeholder {
+  color: var(--line);
+}
+
+/* ---------- 设置 ---------- */
+
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.field input,
+.field select {
+  border-bottom: 1px solid var(--line);
+  padding: 4px 0;
+  width: 100%;
+}
+
+.field input:focus,
+.field select:focus {
+  border-bottom-color: var(--fg);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---------- 登录 ---------- */
+
+.login {
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.login-input {
+  width: 180px;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+
+.login-input:focus {
+  border-bottom-color: var(--fg);
+}
+
+.login-input.is-error {
+  border-bottom-color: var(--p1);
 }
