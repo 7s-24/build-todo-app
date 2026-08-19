@@ -165,6 +165,7 @@ button:focus {
 .nav {
   width: 22px;
   height: 22px;
+  flex: none;
   display: grid;
   place-items: center;
   color: var(--muted);
@@ -177,6 +178,7 @@ button:focus {
 .icon-btn {
   width: 26px;
   height: 26px;
+  flex: none;
   display: grid;
   place-items: center;
   color: var(--muted);
@@ -934,9 +936,30 @@ button:focus {
     height: 18px;
   }
 
+  /* 顶栏在月视图那档最挤：导航 + 三个 tab + 翻月 + 月份 + 三个图标。
+     换成图标之后仍然装不下 375px，所以间距和按钮再收一档。 */
+  .bar {
+    gap: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
   .icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 30px;
+  }
+
+  /* 这个 150px 是给桌面月份标题留的，窄屏纯属白占地方 */
+  .bar-title {
+    min-width: 0;
+  }
+
+  .tab-btn {
+    width: 26px;
+  }
+
+  .appswitch-btn {
+    width: 24px;
   }
 
   /* 设置面板在窄屏上铺满 */
@@ -1247,7 +1270,10 @@ button:focus {
 }
 
 .lang-btn {
-  padding: 3px 6px;
+  width: 20px;
+  height: 24px;
+  display: grid;
+  place-items: center;
   font-size: 11px;
   color: var(--muted);
 }
@@ -1265,8 +1291,10 @@ button:focus {
 }
 
 .appswitch-btn {
-  padding: 3px 9px;
-  font-size: 12px;
+  width: 26px;
+  height: 24px;
+  display: grid;
+  place-items: center;
   color: var(--muted);
   text-decoration: none;
 }
@@ -1392,18 +1420,10 @@ button:focus {
   color: var(--line);
 }
 
-.import-btn {
-  white-space: nowrap;
-  flex: none;
-  font-size: 11.5px;
-  color: var(--muted);
-  padding: 3px 8px;
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.import-btn:hover {
-  color: var(--fg);
-  box-shadow: inset 0 0 0 1px var(--fg);
+/* 正在导入：图标淡下去，不换成文字「…」 */
+.icon-btn.is-busy {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .ledger-foot {
@@ -1445,9 +1465,6 @@ button:focus {
     font-size: 12px;
   }
 
-  .import-btn {
-    font-size: 13px;
-  }
 }
 
 

@@ -7,7 +7,7 @@ import Analysis from "./Analysis";
 import Collapse from "./Collapse";
 import Hint from "./Hint";
 import CellDetail from "./CellDetail";
-import { Chevron } from "./icons";
+import { Chevron, UploadIcon } from "./icons";
 import { useT } from "@/lib/i18n";
 import {
   GROUP_ORDER,
@@ -121,8 +121,13 @@ export default function Ledger() {
         <div className="bar-title">{report.year}</div>
         <div className="bar-spacer" />
         <LangToggle />
-        <button className="import-btn" onClick={() => fileRef.current?.click()}>
-          {busy ? "…" : t("ledger", "import")}
+        <button
+          className={`icon-btn${busy ? " is-busy" : ""}`}
+          onClick={() => fileRef.current?.click()}
+          title={t("ledger", "import")}
+          aria-label={t("ledger", "import")}
+        >
+          <UploadIcon />
         </button>
         <input
           ref={fileRef}

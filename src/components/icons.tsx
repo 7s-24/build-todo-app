@@ -103,6 +103,43 @@ export function FlagIcon() {
   );
 }
 
+/**
+ * 顶层导航的两个图标。
+ * 各自取自那一页自己的视觉语言：日程是任务的方框加勾，
+ * 账簿是长短不一的条 —— 排行和收入构成里用的就是这种条。
+ * 两个轮廓差别足够大，不会和顶栏里其他方块图标混起来。
+ */
+export function TaskIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <rect x="0.7" y="0.7" width="12.6" height="12.6" stroke="currentColor" />
+      <path d="M3.6 7.2l2.4 2.4 4.6-5" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+export function BarsIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <g fill="currentColor">
+        <rect x="0" y="9.2" width="3.4" height="4.8" />
+        <rect x="5.3" y="4.6" width="3.4" height="9.4" />
+        <rect x="10.6" y="0.6" width="3.4" height="13.4" />
+      </g>
+    </svg>
+  );
+}
+
+/** 导入：箭头往上，底下一条线 —— 从文件送进来 */
+export function UploadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M7 10V1.6M3.4 5.2L7 1.5l3.6 3.7" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M0.7 12.4h12.6" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
 export function XIcon() {
   return (
     <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
