@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import type { SettingsDTO } from "@/lib/types";
+import type { FeedStatus, SettingsDTO } from "@/lib/types";
 
 /** 设置面板允许出现文字标签 —— 这里是配置，不是状态展示 */
+function Feeds({ status }: { status: FeedStatus }) {
+  if (status.total === 0) return null;
+  return (
+    <span className={`feeds${status.ok < status.total ? " is-bad" : ""}`}>
+      {status.ok}/{status.total}
+    </span>
+  );
+}
+
 export default function Sheet({
   settings,
   feeds,
@@ -11,7 +20,7 @@ export default function Sheet({
   onClose,
 }: {
   settings: SettingsDTO;
-  feeds: { ok: number; total: number };
+  feeds: { own: FeedStatus; shared: FeedStatus };
   onPatch: (patch: Partial<SettingsDTO>) => void;
   onClose: () => void;
 }) {
@@ -40,22 +49,35 @@ export default function Sheet({
 
         <div className="field">
           <label>
-            Apple 日历订阅地址
-            {feeds.total > 0 && (
-              <span className={`feeds${feeds.ok < feeds.total ? " is-bad" : ""}`}>
-                {feeds.ok}/{feeds.total}
-              </span>
-            )}
+            我的日历
+            <Feeds status={feeds.own} />
           </label>
           <textarea
-            rows={5}
+            rows={4}
             placeholder="webcal://..."
             defaultValue={settings.icsUrls ?? ""}
             onBlur={(e) => onPatch({ icsUrls: e.target.value })}
           />
           <div className="hint">
             一行一个。Mac 日历 → 右键日历 → 共享设置 → 勾选「公开日历」 → 复制链接。
-            只读订阅，本 app 不会写回你的日历。
+          </div>
+        </div>
+
+        <div className="field">
+          <label>
+            他人日历
+            <Feeds status={feeds.shared} />
+          </label>
+          <textarea
+            rows={4}
+            placeholder="webcal:// 或 https://...ics"
+            defaultValue={settings.sharedUrls ?? ""}
+            onBlur={(e) => onPatch({ sharedUrls: e.target.value })}
+          />
+          <div className="hint">
+            家人等别人的日历，一行一个，和自己的分开开关。
+            Apple 同上；Google 日历 → 设置 → 选中该日历 → 「日历的秘密地址（iCal 格式）」。
+            对方把链接给你就行，两边都是只读订阅。
           </div>
         </div>
 

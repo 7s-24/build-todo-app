@@ -51,13 +51,14 @@ function spread(
   allDay: boolean,
   time: string | null,
   range: { start: ISODate; end: ISODate },
+  shared: boolean,
   out: CalEvent[],
 ) {
   let cur = first;
   for (let i = 0; i < MAX_SPAN_DAYS; i++) {
     if (cur > range.end) break;
     if (cur >= range.start) {
-      out.push({ date: cur, title, allDay, time: i === 0 ? time : null });
+      out.push({ date: cur, title, allDay, time: i === 0 ? time : null, shared });
     }
     if (cur >= last) break;
     cur = nextDay(cur);
@@ -73,6 +74,7 @@ export function parseIcs(
   start: ISODate,
   end: ISODate,
   timeZone: string,
+  shared = false,
 ): CalEvent[] {
   const comp = new ICAL.Component(ICAL.parse(text));
 
@@ -105,14 +107,14 @@ export function parseIcs(
       const first = floating(from);
       let last = floating(to);
       if (last > first) last = prevDay(last);
-      spread(first, last, title, true, null, range, out);
+      spread(first, last, title, true, null, range, shared, out);
       return;
     }
     const a = wallClock(from, fmt);
     const b = wallClock(to, fmt);
     // 正好停在 00:00 的跨天事件，最后一天是空的，不画
     const last = b.date > a.date && b.time === "00:00" ? prevDay(b.date) : b.date;
-    spread(a.date, last < a.date ? a.date : last, title, false, a.time, range, out);
+    spread(a.date, last < a.date ? a.date : last, title, false, a.time, range, shared, out);
   };
 
   for (const ve of comp.getAllSubcomponents("vevent")) {

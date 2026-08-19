@@ -6,11 +6,12 @@ import MonthGrid from "./MonthGrid";
 import Sheet from "./Sheet";
 import Sidebar from "./Sidebar";
 import TaskMenu from "./TaskMenu";
-import { CalIcon, Chevron, GearIcon } from "./icons";
+import { CalIcon, Chevron, GearIcon, SharedCalIcon } from "./icons";
 import { monthGrid, shift, todayLocal } from "@/lib/date";
 import type {
   CalEvent,
   CalendarResult,
+  FeedStatus,
   ISODate,
   Priority,
   SettingsDTO,
@@ -22,6 +23,8 @@ const DEFAULT_SETTINGS: SettingsDTO = {
   dailyLimit: 5,
   icsUrls: null,
   showCalendar: true,
+  sharedUrls: null,
+  showShared: true,
   theme: "mono",
 };
 
@@ -56,7 +59,10 @@ export default function App() {
   const [locked, setLocked] = useState<Set<string>>(new Set());
   const [settings, setSettings] = useState<SettingsDTO>(DEFAULT_SETTINGS);
   const [events, setEvents] = useState<CalEvent[]>([]);
-  const [feeds, setFeeds] = useState({ ok: 0, total: 0 });
+  const [feeds, setFeeds] = useState<{ own: FeedStatus; shared: FeedStatus }>({
+    own: { ok: 0, total: 0 },
+    shared: { ok: 0, total: 0 },
+  });
   const [priority, setPriority] = useState<Priority>(2);
   const [sheet, setSheet] = useState(false);
   const [menu, setMenu] = useState<{ task: TaskDTO; x: number; y: number } | null>(null);
@@ -103,9 +109,10 @@ export default function App() {
     };
   }, [load, today]);
 
-  // 日历是「参考」，关掉时直接不拉，省得白跑一趟
+  // 两组日历一次拉完、都带标记，显示与否在渲染时过滤 ——
+  // 开关因此是即时的，不用等网络
   useEffect(() => {
-    if (!settings.showCalendar || !settings.icsUrls) {
+    if (!settings.icsUrls && !settings.sharedUrls) {
       setEvents([]);
       return;
     }
@@ -114,17 +121,21 @@ export default function App() {
     fetch(
       `/api/calendar?start=${range.start}&end=${range.end}&tz=${encodeURIComponent(tz)}`,
     )
-      .then((r) => (r.ok ? r.json() : { events: [], ok: 0, total: 0 }))
+      .then((r) =>
+        r.ok
+          ? r.json()
+          : { events: [], own: { ok: 0, total: 0 }, shared: { ok: 0, total: 0 } },
+      )
       .then((d: CalendarResult) => {
         if (!alive) return;
         setEvents(d.events ?? []);
-        setFeeds({ ok: d.ok ?? 0, total: d.total ?? 0 });
+        setFeeds({ own: d.own, shared: d.shared });
       })
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [range, settings.showCalendar, settings.icsUrls]);
+  }, [range, settings.icsUrls, settings.sharedUrls]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = settings.theme;
@@ -235,7 +246,15 @@ export default function App() {
   const menuTask = menu ? (tasks.find((t) => t.id === menu.task.id) ?? null) : null;
 
   const byDate = useMemo(() => groupBy(tasks), [tasks]);
-  const eventsByDate = useMemo(() => groupEvents(events), [events]);
+  const eventsByDate = useMemo(
+    () =>
+      groupEvents(
+        events.filter((e) =>
+          e.shared ? settings.showShared : settings.showCalendar,
+        ),
+      ),
+    [events, settings.showCalendar, settings.showShared],
+  );
   // 队列只放未完成的 —— 它回答的是「还剩多少」，勾掉的不该继续占位置
   const queue = useMemo(
     () =>
@@ -278,6 +297,12 @@ export default function App() {
           onClick={() => patchSettings({ showCalendar: !settings.showCalendar })}
         >
           <CalIcon on={settings.showCalendar} />
+        </button>
+        <button
+          className={`icon-btn${settings.showShared ? " is-on" : ""}`}
+          onClick={() => patchSettings({ showShared: !settings.showShared })}
+        >
+          <SharedCalIcon on={settings.showShared} />
         </button>
         <button className="icon-btn" onClick={() => setSheet(true)}>
           <GearIcon />

@@ -235,7 +235,10 @@ export default function MonthGrid({
                 )}
 
                 {(events.get(date) ?? []).map((ev, i) => (
-                  <div className="ev" key={`${ev.title}-${i}`}>
+                  <div
+                    className={`ev${ev.shared ? " is-shared" : ""}`}
+                    key={`${ev.title}-${i}`}
+                  >
                     {ev.time && <span className="ev-time">{ev.time}</span>}
                     <span>{ev.title}</span>
                   </div>

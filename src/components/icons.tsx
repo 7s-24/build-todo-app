@@ -28,6 +28,31 @@ export function CalIcon({ on }: { on: boolean }) {
   );
 }
 
+/** 他人日历开关：两张叠起来的日历，开 = 前面那张顶栏实心 */
+export function SharedCalIcon({ on }: { on: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <rect x="4.2" y="1.2" width="9.1" height="8.6" stroke="currentColor" />
+      <rect
+        x="0.7"
+        y="4.2"
+        width="9.1"
+        height="9.1"
+        fill="var(--bg)"
+        stroke="currentColor"
+      />
+      <rect
+        x="0.7"
+        y="4.2"
+        width="9.1"
+        height="2.5"
+        fill={on ? "currentColor" : "var(--bg)"}
+        stroke="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function GearIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>

@@ -496,6 +496,11 @@ button:focus {
   white-space: nowrap;
 }
 
+/* 他人的日历：同样的淡，但左边那道线改成点线，一眼能分出不是自己的 */
+.ev.is-shared {
+  border-left-style: dotted;
+}
+
 .ev-time {
   font-variant-numeric: tabular-nums;
   flex: none;

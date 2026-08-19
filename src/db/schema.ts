@@ -34,9 +34,12 @@ export const days = pgTable("days", {
 export const settings = pgTable("settings", {
   id: integer("id").primaryKey().default(1),
   dailyLimit: integer("daily_limit").notNull().default(5),
-  /** 一行一个订阅地址 */
+  /** 自己的日历，一行一个订阅地址 */
   icsUrls: text("ics_urls"),
   showCalendar: boolean("show_calendar").notNull().default(true),
+  /** 他人的日历（家人等），一行一个。和自己的分开存、分开开关 */
+  sharedUrls: text("shared_urls"),
+  showShared: boolean("show_shared").notNull().default(true),
   theme: text("theme").notNull().default("mono"),
 });
 

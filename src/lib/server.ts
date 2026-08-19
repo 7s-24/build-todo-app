@@ -25,6 +25,8 @@ export async function ensureSettings(): Promise<SettingsDTO> {
       dailyLimit: s.dailyLimit,
       icsUrls: s.icsUrls,
       showCalendar: s.showCalendar,
+      sharedUrls: s.sharedUrls,
+      showShared: s.showShared,
       theme: s.theme,
     };
   }
@@ -33,6 +35,8 @@ export async function ensureSettings(): Promise<SettingsDTO> {
     dailyLimit: created.dailyLimit,
     icsUrls: created.icsUrls,
     showCalendar: created.showCalendar,
+    sharedUrls: created.sharedUrls,
+    showShared: created.showShared,
     theme: created.theme,
   };
 }
